@@ -1,0 +1,2 @@
+python-bitcoinlib==0.5.0
+coverage==4.0.2
