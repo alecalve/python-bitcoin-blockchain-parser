@@ -13,6 +13,8 @@ This Python 3 library provides a parser for the raw data stored by bitcoind.
 import sys
 from blockchain_parser.blockchain import Blockchain
 
+# Instanciate the Blockchain by giving the path to the directory 
+# containing the .blk files created by bitcoind
 blockchain = Blockchain(sys.argv[1])
 for block in blockchain.get_unordered_blocks():
     for tx in block.transactions:
