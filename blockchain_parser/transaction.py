@@ -73,3 +73,24 @@ class Transaction(object):
         if self._hash is None:
             self._hash = format_hash(double_sha256(self.hex))
         return self._hash
+
+    def is_coinbase(self):
+        """Returns whether the transaction is a coinbase transaction"""
+        for input in self.inputs:
+            if input.transaction_hash == "0" * 64:
+                return True
+        return False
+
+    def uses_replace_by_fee(self):
+        """Returns whether the transaction opted-in for RBF"""
+        # Coinbase transactions may have a sequence number that signals RBF
+        # but they cannot use it as it's only enforced for non-coinbase txs
+        if self.is_coinbase():
+            return False
+
+        # A transactions opts-in for RBF when having an input
+        # with a sequence number < MAX_INT - 1
+        for input in self.inputs:
+            if input.sequence_number < 4294967294:
+                return True
+        return False
