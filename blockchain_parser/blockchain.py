@@ -87,7 +87,7 @@ class Blockchain(object):
         # We suppose the best chain tip is the last block written by bitcoind,
         # it is not very robust but is enough for simple uses
         for block in self.get_unordered_blocks():
-            predecessor[block.hash] = block.header["previous_block_hash"]
+            predecessor[block.hash] = block.header.previous_block_hash
             tip = block.hash
 
         logging.debug("All blocks are read")
