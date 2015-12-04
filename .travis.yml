@@ -14,4 +14,6 @@ script:
   - coverage run --append --include='blockchain_parser/*' --omit='*/tests/*' setup.py test
 
 after_success:
-  - coveralls
+  - if [[ $ENV == python=3.4* ]]; then
+          coveralls;
+    fi
