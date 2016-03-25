@@ -6,7 +6,7 @@ This Python 3 library provides a parser for the raw data stored by bitcoind.
 - Detects addresses in outputs
 - Interprets scripts
 
-## Example
+## Examples
 
 ```python
 import sys
@@ -20,6 +20,8 @@ for block in blockchain.get_unordered_blocks():
         for no, output in enumerate(tx.outputs):
             print("tx=%s outputno=%d type=%s value=%s" % (tx.hash, no, output.type, output.value))
 ```
+
+More examples are available in the examples directory.
 
 ## Installing
 
