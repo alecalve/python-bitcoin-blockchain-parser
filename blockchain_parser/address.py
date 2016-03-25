@@ -54,3 +54,6 @@ class Address(object):
 
             self._address = base58.encode(version + self.hash + checksum[:4])
         return self._address
+
+    def is_p2sh(self):
+        return self.type == "p2sh"
