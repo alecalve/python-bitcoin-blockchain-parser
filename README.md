@@ -2,7 +2,6 @@
 This Python 3 library provides a parser for the raw data stored by bitcoind. 
 
 ## Features
-- Returns blocks in an unordered fashion or in the main chain order
 - Detects outputs types
 - Detects addresses in outputs
 - Interprets scripts

@@ -12,7 +12,6 @@
 import os
 import mmap
 import struct
-import logging
 
 from .block import Block
 
@@ -70,66 +69,3 @@ class Blockchain(object):
         for blk_file in get_files(self.path):
             for raw_block in get_blocks(blk_file):
                 yield Block(raw_block)
-
-    def get_main_chain(self):
-        """Yields the blocks contained in the main chain in the right order,
-        from the genesis block to the chain tip. Each returned block has its
-        height attribute set correctly. Blocks that aren't present in
-        the mainchain aren't returned by this method, use get_unordered_blocks
-        to get *all* blocks stored in the .blk files
-        """
-
-        genesis = "0" * 64
-        tip = None
-        predecessor = {}
-
-        # Linking blocks to their precedessor
-        # We suppose the best chain tip is the last block written by bitcoind,
-        # it is not very robust but is enough for simple uses
-        for block in self.get_unordered_blocks():
-            predecessor[block.hash] = block.header.previous_block_hash
-            tip = block.hash
-
-        logging.debug("All blocks are read")
-
-        # Building the mainchain by going from the tip to the genesis block
-        mainchain = []
-        while tip != genesis:
-            mainchain.append(tip)
-            tip = predecessor[tip]
-
-        logging.debug("Mainchain constructed")
-
-        # Having built the mainchain, we can begin to return full blocks in the
-        # right order
-        prev_hash = genesis
-        # Holding out-of-order blocks in a dict, keys are hashes
-        blocks = {}
-        height = 0
-        # This is the block to fetch
-        next_hash = mainchain.pop()
-        for block in self.get_unordered_blocks():
-            if len(mainchain) == 0:
-                raise StopIteration()
-
-            # If it has already been seen, we return it
-            if next_hash in blocks:
-                seen = blocks[next_hash]
-                assert(seen.header.previous_block_hash == prev_hash)
-                seen.height = height
-                height += 1
-                yield seen
-                prev_hash = next_hash
-                del blocks[next_hash]
-                next_hash = mainchain.pop()
-            # Else, if it's the current block, we return it
-            elif block.hash == next_hash:
-                assert(block.header.previous_block_hash == prev_hash)
-                block.height = height
-                height += 1
-                yield block
-                prev_hash = next_hash
-                next_hash = mainchain.pop()
-            # Else, we store the current block and go to the next one
-            else:
-                blocks[block.hash] = block
