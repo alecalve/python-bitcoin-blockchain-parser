@@ -17,5 +17,8 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
         'Topic :: Software Development :: Libraries',
+    ],
+    install_requires=[
+        'python-bitcoinlib==0.5.0',
     ]
 )
