@@ -12,6 +12,7 @@
 from bitcoin.core.script import CScript, CScriptInvalidError
 from binascii import b2a_hex
 
+
 class Script(object):
     """Represents a bitcoin script contained in an input or output"""
 
