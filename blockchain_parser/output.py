@@ -39,9 +39,7 @@ class Output(object):
 
     def __init__(self, raw_hex):
         self._value = None
-        self._script_hex = None
         self._script = None
-        self.size = None
         self._addresses = None
 
         script_length, varint_size = decode_varint(raw_hex[8:])
@@ -49,7 +47,7 @@ class Output(object):
 
         self._script_hex = raw_hex[script_start:script_start+script_length]
         self.size = script_start + script_length
-        self.hex = raw_hex[:self.size]
+        self._value_hex = raw_hex[:8]
 
     @classmethod
     def from_hex(cls, hex_):
@@ -62,7 +60,7 @@ class Output(object):
     def value(self):
         """Returns the value of the output exprimed in satoshis"""
         if self._value is None:
-            self._value = decode_uint64(self.hex[:8])
+            self._value = decode_uint64(self._value_hex)
         return self._value
 
     @property
@@ -108,13 +106,11 @@ class Output(object):
             and is_public_key(self.script.operations[0])
 
     def is_pubkeyhash(self):
-        if len(self.script.operations) != 5:
-            return False
-        return self.script.operations[0] == OP_DUP \
-            and self.script.operations[1] == OP_HASH160 \
-            and self.script.operations[-2] == OP_EQUALVERIFY \
-            and self.script.operations[-1] == OP_CHECKSIG \
-            and len(self.script.operations[2]) == 20
+        return len(self._script_hex) == 25 \
+            and self._script_hex[0] == OP_DUP \
+            and self._script_hex[1] == OP_HASH160 \
+            and self._script_hex[-2] == OP_EQUALVERIFY \
+            and self._script_hex[-1] == OP_CHECKSIG
 
     def is_multisig(self):
         if len(self.script.operations) < 4:
