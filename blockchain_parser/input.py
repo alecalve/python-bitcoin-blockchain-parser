@@ -17,13 +17,10 @@ class Input(object):
     """Represents a transaction input"""
 
     def __init__(self, raw_hex):
-        self.hex = None
         self._transaction_hash = None
         self._transaction_index = None
-        self._script_hex = None
         self._script = None
         self._sequence_number = None
-        self.size = None
 
         self._script_length, varint_length = decode_varint(raw_hex[36:])
         self._script_start = 36 + varint_length
