@@ -48,12 +48,16 @@ def decode_varint(data):
     if size < 253:
         return size, 1
 
-    format_map = {
-        253: '<H',
-        254: '<I',
-        255: '<Q'
-    }
+    format_ = None
+    if size == 253:
+        format_ = '<H'
+    elif size == 254:
+        format_ = '<I'
+    elif size == 255:
+        format_ = '<Q'
+    else:
+        # Should never be reached
+        assert 0, "unknown format_ for size : %s" % size
 
-    format_ = format_map[size]
     size = struct.calcsize(format_)
     return struct.unpack(format_, data[1:size+1])[0], size + 1
