@@ -14,6 +14,10 @@ from .input import Input
 from .output import Output
 
 
+def bip69_sort(data):
+    return list(sorted(data, key=lambda t: (t[0], t[1])))
+
+
 class Transaction(object):
     """Represents a bitcoin transaction"""
 
@@ -23,22 +27,24 @@ class Transaction(object):
         self.outputs = None
         self._version = None
         self._locktime = None
+        self.n_inputs = 0
+        self.n_outputs = 0
 
         offset = 4
-        n_inputs, varint_size = decode_varint(raw_hex[offset:])
+        self.n_inputs, varint_size = decode_varint(raw_hex[offset:])
         offset += varint_size
 
         self.inputs = []
-        for i in range(n_inputs):
+        for i in range(self.n_inputs):
             input = Input.from_hex(raw_hex[offset:])
             offset += input.size
             self.inputs.append(input)
 
-        n_outputs, varint_size = decode_varint(raw_hex[offset:])
+        self.n_outputs, varint_size = decode_varint(raw_hex[offset:])
         offset += varint_size
 
         self.outputs = []
-        for i in range(n_outputs):
+        for i in range(self.n_outputs):
             output = Output.from_hex(raw_hex[offset:])
             offset += output.size
             self.outputs.append(output)
@@ -94,3 +100,22 @@ class Transaction(object):
             if input.sequence_number < 4294967294:
                 return True
         return False
+
+    def uses_bip69(self):
+        """Returns whether the transaction complies to BIP-69,
+        lexicographical ordering of inputs and outputs"""
+        # Quick check
+        if self.n_inputs == 1 and self.n_outputs == 1:
+            return True
+
+        input_keys = [
+            (i.transaction_hash, i.transaction_index)
+            for i in self.inputs
+        ]
+
+        if bip69_sort(input_keys) != input_keys:
+            return False
+
+        output_keys = [(o.value, o.script.value) for o in self.outputs]
+
+        return bip69_sort(output_keys) == output_keys

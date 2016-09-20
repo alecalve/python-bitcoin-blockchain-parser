@@ -9,6 +9,7 @@
 # modified, propagated, or distributed except according to the terms contained
 # in the LICENSE file.
 
+import os
 import unittest
 from binascii import a2b_hex
 from blockchain_parser.transaction import Transaction
@@ -32,3 +33,18 @@ class TestTransaction(unittest.TestCase):
         tx = Transaction(coinbase)
         self.assertTrue(tx.is_coinbase())
         self.assertFalse(tx.uses_replace_by_fee())
+
+    def test_bip69(self):
+        noncompliant = "blockchain_parser/tests/bip69_false.txt"
+        with open(os.path.join(os.getcwd(), noncompliant)) as f:
+            data = a2b_hex(f.read().strip())
+
+        tx = Transaction(data)
+        self.assertFalse(tx.uses_bip69())
+
+        compliant = "blockchain_parser/tests/bip69_true.txt"
+        with open(os.path.join(os.getcwd(), compliant)) as f:
+            data = a2b_hex(f.read().strip())
+
+        tx = Transaction(data)
+        self.assertTrue(tx.uses_bip69())
