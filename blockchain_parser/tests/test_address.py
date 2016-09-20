@@ -1,4 +1,4 @@
-# Copyright (C) 2015 The bitcoin-blockchain-parser developers
+# Copyright (C) 2015-2016 The bitcoin-blockchain-parser developers
 #
 # This file is part of bitcoin-blockchain-parser.
 #
