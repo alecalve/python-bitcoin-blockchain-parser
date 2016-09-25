@@ -9,29 +9,9 @@
 # modified, propagated, or distributed except according to the terms contained
 # in the LICENSE file.
 
-from bitcoin.core.script import *
 from .utils import decode_varint, decode_uint64
 from .script import Script
 from .address import Address
-
-
-def is_public_key(hex_data):
-    """Given a bytes string, returns whether its is probably a bitcoin
-    public key or not. It doesn't actually ensures that the data is a valid
-    public key, justs that it looks like one
-    """
-    if type(hex_data) != bytes:
-        return False
-
-    # Uncompressed public key
-    if len(hex_data) == 65 and hex_data[0] == 4:
-        return True
-
-    # Compressed public key
-    if len(hex_data) == 33 and hex_data[0] in [2, 3]:
-        return True
-
-    return False
 
 
 class Output(object):
@@ -95,46 +75,22 @@ class Output(object):
         return self._addresses
 
     def is_return(self):
-        return self.script.script.is_unspendable()
+        return self.script.is_return()
 
     def is_p2sh(self):
-        return self.script.script.is_p2sh()
+        return self.script.is_p2sh()
 
     def is_pubkey(self):
-        return len(self.script.operations) == 2 \
-            and self.script.operations[-1] == OP_CHECKSIG \
-            and is_public_key(self.script.operations[0])
+        return self.script.is_pubkey()
 
     def is_pubkeyhash(self):
-        return len(self._script_hex) == 25 \
-            and self._script_hex[0] == OP_DUP \
-            and self._script_hex[1] == OP_HASH160 \
-            and self._script_hex[-2] == OP_EQUALVERIFY \
-            and self._script_hex[-1] == OP_CHECKSIG
+        return self.script.is_pubkeyhash()
 
     def is_multisig(self):
-        if len(self.script.operations) < 4:
-            return False
-        m = self.script.operations[0]
-
-        if not type(m) == int:
-            return False
-
-        for i in range(m):
-            if not is_public_key(self.script.operations[1+i]):
-                return False
-
-        n = self.script.operations[-2]
-        if type(n) != int or n < m \
-                or self.script.operations[-1] != OP_CHECKMULTISIG:
-            return False
-
-        return True
+        return self.script.is_multisig()
 
     def is_unknown(self):
-        return not self.is_pubkeyhash() and not self.is_pubkey() \
-            and not self.is_p2sh() and not self.is_multisig() \
-            and not self.is_return()
+        return self.script.is_unknown()
 
     @property
     def type(self):

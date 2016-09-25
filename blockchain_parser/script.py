@@ -9,8 +9,27 @@
 # modified, propagated, or distributed except according to the terms contained
 # in the LICENSE file.
 
-from bitcoin.core.script import CScript, CScriptInvalidError
+from bitcoin.core.script import *
 from binascii import b2a_hex
+
+
+def is_public_key(hex_data):
+    """Given a bytes string, returns whether its is probably a bitcoin
+    public key or not. It doesn't actually ensures that the data is a valid
+    public key, justs that it looks like one
+    """
+    if type(hex_data) != bytes:
+        return False
+
+    # Uncompressed public key
+    if len(hex_data) == 65 and hex_data[0] == 4:
+        return True
+
+    # Compressed public key
+    if len(hex_data) == 33 and hex_data[0] in [2, 3]:
+        return True
+
+    return False
 
 
 class Script(object):
@@ -71,3 +90,45 @@ class Script(object):
             self._value = " ".join(representations)
 
         return self._value
+
+    def is_return(self):
+        return self.script.is_unspendable()
+
+    def is_p2sh(self):
+        return self.script.is_p2sh()
+
+    def is_pubkey(self):
+        return len(self.operations) == 2 \
+            and self.operations[-1] == OP_CHECKSIG \
+            and is_public_key(self.operations[0])
+
+    def is_pubkeyhash(self):
+        return len(self.hex) == 25 \
+            and self.hex[0] == OP_DUP \
+            and self.hex[1] == OP_HASH160 \
+            and self.hex[-2] == OP_EQUALVERIFY \
+            and self.hex[-1] == OP_CHECKSIG
+
+    def is_multisig(self):
+        if len(self.operations) < 4:
+            return False
+        m = self.operations[0]
+
+        if not isinstance(m, int):
+            return False
+
+        for i in range(m):
+            if not is_public_key(self.operations[1+i]):
+                return False
+
+        n = self.operations[-2]
+        if not isinstance(n, int) or n < m \
+                or self.operations[-1] != OP_CHECKMULTISIG:
+            return False
+
+        return True
+
+    def is_unknown(self):
+        return not self.is_pubkeyhash() and not self.is_pubkey() \
+            and not self.is_p2sh() and not self.is_multisig() \
+            and not self.is_return()

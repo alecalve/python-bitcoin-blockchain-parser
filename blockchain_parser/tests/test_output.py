@@ -12,7 +12,7 @@
 import unittest
 from binascii import a2b_hex
 
-from blockchain_parser.output import Output, is_public_key
+from blockchain_parser.output import Output
 
 
 class TestOutput(unittest.TestCase):
@@ -64,12 +64,3 @@ class TestOutput(unittest.TestCase):
         output = Output.from_hex(a2b_hex(raw_output))
         self.assertEqual("unknown", output.type)
         self.assertEqual(0, len(output.addresses))
-
-    def test_is_public_key(self):
-        case1 = "010000000000000017a91471c5c3727fac8dbace94bd38cf8ac16a034a7" \
-                "94787"
-        self.assertFalse(is_public_key(a2b_hex(case1)))
-        self.assertFalse(is_public_key(None))
-        case3 = "02c0993f639534d348e1dca30566491e6cb11c14afa13ec244c05396a98" \
-                "39aeb17"
-        self.assertTrue(is_public_key(a2b_hex(case3)))
