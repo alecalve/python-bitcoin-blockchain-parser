@@ -75,9 +75,12 @@ class Block(object):
 
     @property
     def transactions(self):
-        """Returns a generator of the block's transactions represented
+        """Returns a list of the block's transactions represented
         as Transaction objects"""
-        return get_block_transactions(self.hex)
+        if self._transactions is None:
+            self._transactions = list(get_block_transactions(self.hex))
+
+        return self._transactions
 
     @property
     def header(self):
