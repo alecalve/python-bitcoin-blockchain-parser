@@ -24,11 +24,11 @@ def is_public_key(hex_data):
         return False
 
     # Uncompressed public key
-    if len(hex_data) == 65 and hex_data[0] == 4:
+    if len(hex_data) == 65 and ord(hex_data[0]) == 4:
         return True
 
     # Compressed public key
-    if len(hex_data) == 33 and hex_data[0] in [2, 3]:
+    if len(hex_data) == 33 and ord(hex_data[0]) in [2, 3]:
         return True
 
     return False
