@@ -11,6 +11,7 @@
 
 from bitcoin.core.script import *
 from binascii import b2a_hex
+from .utils import to_int
 
 
 def is_public_key(hex_data):
@@ -22,11 +23,11 @@ def is_public_key(hex_data):
         return False
 
     # Uncompressed public key
-    if len(hex_data) == 65 and hex_data[0] == 4:
+    if len(hex_data) == 65 and to_int(hex_data[0]) == 4:
         return True
 
     # Compressed public key
-    if len(hex_data) == 33 and hex_data[0] in [2, 3]:
+    if len(hex_data) == 33 and to_int(hex_data[0]) in [2, 3]:
         return True
 
     return False
@@ -65,15 +66,12 @@ class Script(object):
            - a CScriptOP
            - bytes data pushed to the stack
            - an int pushed to the stack
-        If the script is invalid (some coinbase scripts are), a list containing
-        one operation (INVALID_SCRIPT) is returned
+        If the script is invalid (some coinbase scripts are), an exception is
+        thrown
         """
         if self._operations is None:
             # Some coinbase scripts are garbage, they could not be valid
-            try:
-                self._operations = list(self.script)
-            except CScriptInvalidError:
-                self._operations = ["INVALID_SCRIPT"]
+            self._operations = list(self.script)
 
         return self._operations
 
@@ -82,12 +80,16 @@ class Script(object):
         """Returns a string representation of the script"""
         if self._value is None:
             representations = []
-            for operation in self.operations:
-                if type(operation) == bytes:
-                    representations.append(b2a_hex(operation).decode("ascii"))
-                else:
-                    representations.append(str(operation))
-            self._value = " ".join(representations)
+            try:
+                for operation in self.operations:
+                    if isinstance(operation, bytes):
+                        representations.append(b2a_hex(operation).decode("ascii"))
+                    else:
+                        representations.append(str(operation))
+
+                self._value = " ".join(representations)
+            except CScriptInvalidError as e:
+                self._value = "INVALID_SCRIPT"
 
         return self._value
 
@@ -104,10 +106,10 @@ class Script(object):
 
     def is_pubkeyhash(self):
         return len(self.hex) == 25 \
-            and self.hex[0] == OP_DUP \
-            and self.hex[1] == OP_HASH160 \
-            and self.hex[-2] == OP_EQUALVERIFY \
-            and self.hex[-1] == OP_CHECKSIG
+            and self.operations[0] == OP_DUP \
+            and self.operations[1] == OP_HASH160 \
+            and self.operations[-2] == OP_EQUALVERIFY \
+            and self.operations[-1] == OP_CHECKSIG
 
     def is_multisig(self):
         if len(self.operations) < 4:
