@@ -37,8 +37,12 @@ def get_blocks(blockfile):
     yields its raw hexadecimal value
     """
     with open(blockfile, "rb") as f:
-        # Unix-only call, will not work on Windows, see python doc.
-        raw_data = mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ)
+        if os.name == 'nt':
+            size = os.path.getsize(f.name)
+            raw_data = mmap.mmap(f.fileno(), size, access=mmap.ACCESS_READ)
+        else:
+            # Unix-only call, will not work on Windows, see python doc.
+            raw_data = mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ)
         length = len(raw_data)
         offset = 0
         block_count = 0
