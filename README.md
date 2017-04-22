@@ -1,43 +1,23 @@
-# bitcoin-blockchain-parser [![Build Status](https://travis-ci.org/alecalve/python-bitcoin-blockchain-parser.svg?branch=master)](https://travis-ci.org/alecalve/python-bitcoin-blockchain-parser) [![Coverage Status](https://coveralls.io/repos/alecalve/python-bitcoin-blockchain-parser/badge.svg?branch=master&service=github)](https://coveralls.io/github/alecalve/python-bitcoin-blockchain-parser?branch=master)
-This Python 3 library provides a parser for the raw data stored by bitcoind. 
+This is a fork of the `bitcoin-blockchain-parser` project found here:
+https://github.com/alecalve/python-bitcoin-blockchain-parser
 
-## Features
-- Detects outputs types
-- Detects addresses in outputs
-- Interprets scripts
+Differences include: Modifications to make parsing work with altcoins such as
+Dash, Dogecoin, Litecoin and Feathercoin.
 
-## Examples
+To use with litecoin:
 
-```python
-import sys
-from blockchain_parser.blockchain import Blockchain
+    >>> ltc=Blockchain('/media/chris/3033-6537/litecoin/blocks', b"\xfb\xc0\xb6\xdb")
+    >>> next(ltc.get_unordered_blocks())
+    Block(12a765e31ffd4059bada1e25190f6e98c99d9714d334efa41a195a7e7e04bfe2)
 
-# Instanciate the Blockchain by giving the path to the directory 
-# containing the .blk files created by bitcoind
-blockchain = Blockchain(sys.argv[1])
-for block in blockchain.get_unordered_blocks():
-    for tx in block.transactions:
-        for no, output in enumerate(tx.outputs):
-            print("tx=%s outputno=%d type=%s value=%s" % (tx.hash, no, output.type, output.value))
-```
+To use with bitcoin:
 
-More examples are available in the examples directory.
+    >>> btc=Blockchain('/home/chris/.bitcoin/blocks/')
+    >>> next(btc.get_unordered_blocks())
+    Block(000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f)
 
-## Installing
+and dash:
 
-Requirements : python-bitcoinlib, coverage for tests
-
-To install, just run
-```
-python setup.py install
-```
-
-## Tests
-
-Run the test suite by lauching
-```
-./tests.sh
-```
-
-
-
+    >>> dash=Blockchain('/media/chris/3033-6537/dash/blocks', b"\xbf\x0c\x6b\xbd")
+    >>> next(dash.get_unordered_blocks())
+    Block(089fc444b06edd0f70d9fda85f9a3b2e22e549b354a1bdb210ce7804c69eb0a4)

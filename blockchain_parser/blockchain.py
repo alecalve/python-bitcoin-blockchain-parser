@@ -16,10 +16,6 @@ import struct
 from .block import Block
 
 
-# Constant separating blocks in the .blk files
-BITCOIN_CONSTANT = b"\xf9\xbe\xb4\xd9"
-
-
 def get_files(path):
     """
     Given the path to the .bitcoin directory, returns the sorted list of .blk
@@ -31,7 +27,7 @@ def get_files(path):
     return sorted(files)
 
 
-def get_blocks(blockfile):
+def get_blocks(blockfile, pchMessageStart=b"\xf9\xbe\xb4\xd9"):
     """
     Given the name of a .blk file, for every block contained in the file,
     yields its raw hexadecimal value
@@ -47,7 +43,7 @@ def get_blocks(blockfile):
         offset = 0
         block_count = 0
         while offset < (length - 4):
-            if raw_data[offset:offset+4] == BITCOIN_CONSTANT:
+            if raw_data[offset:offset+4] == pchMessageStart:
                 offset += 4
                 size = struct.unpack("<I", raw_data[offset:offset+4])[0]
                 offset += 4 + size
@@ -63,13 +59,14 @@ class Blockchain(object):
     maintained by bitcoind.
     """
 
-    def __init__(self, path):
+    def __init__(self, path, pchMessageStart=b"\xf9\xbe\xb4\xd9"):
         self.path = path
+        self.pchMessageStart = pchMessageStart
 
     def get_unordered_blocks(self):
         """Yields the blocks contained in the .blk files as is,
         without ordering them according to height.
         """
         for blk_file in get_files(self.path):
-            for raw_block in get_blocks(blk_file):
+            for raw_block in get_blocks(blk_file, pchMessageStart=self.pchMessageStart):
                 yield Block(raw_block)
