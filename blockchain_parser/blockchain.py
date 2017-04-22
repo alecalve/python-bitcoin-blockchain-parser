@@ -59,13 +59,14 @@ class Blockchain(object):
     maintained by bitcoind.
     """
 
-    def __init__(self, path):
+    def __init__(self, path, pchMessageStart=b"\xf9\xbe\xb4\xd9"):
         self.path = path
+        self.pchMessageStart = pchMessageStart
 
     def get_unordered_blocks(self):
         """Yields the blocks contained in the .blk files as is,
         without ordering them according to height.
         """
         for blk_file in get_files(self.path):
-            for raw_block in get_blocks(blk_file):
+            for raw_block in get_blocks(blk_file, pchMessageStart=self.pchMessageStart):
                 yield Block(raw_block)
