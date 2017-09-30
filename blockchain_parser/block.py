@@ -9,9 +9,10 @@
 # modified, propagated, or distributed except according to the terms contained
 # in the LICENSE file.
 
+from binascii import b2a_hex
 from .transaction import Transaction
 from .block_header import BlockHeader
-from .utils import format_hash, decode_varint, double_sha256
+from .utils import format_hash, decode_varint, double_sha256, decode_uint32
 
 
 def get_block_transactions(raw_hex):
@@ -45,7 +46,7 @@ class Block(object):
         self._header = None
         self._n_transactions = None
         self.size = len(raw_hex)
-        self.height = None
+        self._height = None
 
     def __repr__(self):
         return "Block(%s)" % self.hash
@@ -88,3 +89,14 @@ class Block(object):
         if self._header is None:
             self._header = BlockHeader.from_hex(self.hex[:80])
         return self._header
+
+    @property
+    def height(self):
+        """Returns block height for blocks with version > 1"""
+        if self.header.version > 1:
+            if self._height is None:
+                for tx in self.transactions:
+                    if tx.is_coinbase:
+                        self._height = decode_uint32(tx.inputs[0].script.hex[1:4] + b'\0')
+                        break
+        return self._height
