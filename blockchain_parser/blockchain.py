@@ -73,3 +73,53 @@ class Blockchain(object):
         for blk_file in get_files(self.path):
             for raw_block in get_blocks(blk_file):
                 yield Block(raw_block)
+
+    def get_ordered_blocks(self):
+        """ Yields blocks in sequential order according to height.
+            Also sets the height property
+        """
+
+        last_blk = None
+        global_blks=dict()
+        blk_files =  get_files(self.path)
+
+        # Blocks are not written in sequence into the block files.
+        # Thus, it's possible that 'block n' is in file 2 and 'block n+1' is n file 50.
+        # This means, instead of simply iterating over the files, we have to find the genesis block first
+        # and then we have to look for the next block and if we can't find it in our little cache, load a bunch of
+        # blocks from the next file(s) until we find the correct block.
+
+
+        while len(blk_files) >0 or len(global_blks)>0:
+            reload = True
+            if last_blk is None:
+                last_blk = global_blks.pop("0"*64,None)
+                if last_blk is not None:
+                    reload=False
+                    last_blk.height=0
+            else:
+                b = global_blks.pop(last_blk.hash,None)
+                if b is not None:
+                    reload = False
+                    b.height = last_blk.height + 1
+                    last_blk = b
+
+            if reload and len(blk_files) >0:
+                blks = [Block(raw_block) for raw_block in get_blocks(blk_files.pop(0))]
+                for blk in blks:
+                    global_blks[blk.header.previous_block_hash] = blk
+                reload=False
+            elif reload and len(blk_files) ==0:
+                # This means, we can't find the next consecutive block, but we also have no files left to look into
+                # so the search is over, even if there are still blocks in global_blks
+                break
+            else:
+                yield last_blk
+
+
+
+
+
+
+
+
