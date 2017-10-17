@@ -12,6 +12,7 @@
 import os
 import mmap
 import struct
+import stat
 
 from .block import Block
 
@@ -25,6 +26,8 @@ def get_files(path):
     Given the path to the .bitcoin directory, returns the sorted list of .blk
     files contained in that directory
     """
+    if not stat.S_ISDIR(os.stat(path)[stat.ST_MODE]):
+        return [path]
     files = os.listdir(path)
     files = [f for f in files if f.startswith("blk") and f.endswith(".dat")]
     files = map(lambda x: os.path.join(path, x), files)
