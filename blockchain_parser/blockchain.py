@@ -13,8 +13,11 @@ import os
 import mmap
 import struct
 import stat
+import leveldb
 
 from .block import Block
+from .index import DBBlockIndex
+from .utils import format_hash
 
 
 # Constant separating blocks in the .blk files
@@ -60,6 +63,13 @@ def get_blocks(blockfile):
                 offset += 1
         raw_data.close()
 
+def get_block(blockfile, offset):
+    """Extracts a single block from the blockfile at the given offset"""
+    with open(blockfile, "rb") as f:
+        f.seek(offset - 4) # Size is present 4 bytes before the db offset
+        size, = struct.unpack("<I", f.read(4))
+        return f.read(size)
+
 
 class Blockchain(object):
     """Represent the blockchain contained in the series of .blk files
@@ -76,3 +86,16 @@ class Blockchain(object):
         for blk_file in get_files(self.path):
             for raw_block in get_blocks(blk_file):
                 yield Block(raw_block)
+
+    def get_ordered_blocks(self, index):
+        """Yields the blocks contained in the .blk files as per
+        the heigt extract from the leveldb index present at path
+        index maintained by bitcoind"""
+        db = leveldb.LevelDB(index)
+        blockIndexs = [DBBlockIndex(format_hash(k[1:]), v)
+                for k, v in db.RangeIter() if k[0] == ord('b')]
+        blockIndexs.sort(key = lambda x: x.height)
+
+        for blkIdx in blockIndexs:
+            blkFile = os.path.join(self.path, "blk%05d.dat" % blkIdx.nFile)
+            yield Block(get_block(blkFile, blkIdx.dataPos))
