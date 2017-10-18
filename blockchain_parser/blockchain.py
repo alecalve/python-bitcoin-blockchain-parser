@@ -78,6 +78,8 @@ class Blockchain(object):
 
     def __init__(self, path):
         self.path = path
+        self.blockIndexes = None
+        self.indexPath = None
 
     def get_unordered_blocks(self):
         """Yields the blocks contained in the .blk files as is,
@@ -87,18 +89,29 @@ class Blockchain(object):
             for raw_block in get_blocks(blk_file):
                 yield Block(raw_block)
 
+    def __getBlockIndexes(self, index):
+        """There is no method of leveldb to close the db (and release the lock).
+        This creates problem during concurrent operations.
+        This function also provides caching of indexes.
+        """
+        if self.indexPath != index:
+            db = leveldb.LevelDB(index)
+            self.blockIndexes = [DBBlockIndex(format_hash(k[1:]), v)
+                    for k, v in db.RangeIter() if k[0] == ord('b')]
+            self.blockIndexes.sort(key = lambda x: x.height)
+            self.indexPath = index
+        return self.blockIndexes
+
     def get_ordered_blocks(self, index, start=0, end=None):
         """Yields the blocks contained in the .blk files as per
         the heigt extract from the leveldb index present at path
-        index maintained by bitcoind"""
-        db = leveldb.LevelDB(index)
-        blockIndexs = [DBBlockIndex(format_hash(k[1:]), v)
-                for k, v in db.RangeIter() if k[0] == ord('b')]
-        blockIndexs.sort(key = lambda x: x.height)
+        index maintained by bitcoind.
+        """
+        blockIndexes = self.__getBlockIndexes(index)
 
         if end is None:
-            end = len(blockIndexs)
+            end = len(blockIndexes)
 
-        for blkIdx in blockIndexs[start:end]:
+        for blkIdx in blockIndexes[start:end]:
             blkFile = os.path.join(self.path, "blk%05d.dat" % blkIdx.nFile)
             yield Block(get_block(blkFile, blkIdx.dataPos))
