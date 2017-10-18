@@ -87,7 +87,7 @@ class Blockchain(object):
             for raw_block in get_blocks(blk_file):
                 yield Block(raw_block)
 
-    def get_ordered_blocks(self, index):
+    def get_ordered_blocks(self, index, start=0, end=None):
         """Yields the blocks contained in the .blk files as per
         the heigt extract from the leveldb index present at path
         index maintained by bitcoind"""
@@ -96,6 +96,9 @@ class Blockchain(object):
                 for k, v in db.RangeIter() if k[0] == ord('b')]
         blockIndexs.sort(key = lambda x: x.height)
 
-        for blkIdx in blockIndexs:
+        if end is None:
+            end = len(blockIndexs)
+
+        for blkIdx in blockIndexs[start:end]:
             blkFile = os.path.join(self.path, "blk%05d.dat" % blkIdx.nFile)
             yield Block(get_block(blkFile, blkIdx.dataPos))
