@@ -18,7 +18,7 @@ from .block import Block
 
 # Constant separating blocks in the .blk files
 BITCOIN_CONSTANT = b"\xf9\xbe\xb4\xd9"
-
+BITCOIN_GENESIS_BLOCK_HASH = '000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f'
 
 def get_files(path):
     """
@@ -73,3 +73,52 @@ class Blockchain(object):
         for blk_file in get_files(self.path):
             for raw_block in get_blocks(blk_file):
                 yield Block(raw_block)
+
+    def get_ordered_blocks(self):
+            """
+            yields the blocks contained in the .blk files by their height
+            order, however since the blocks are not always ordered in the blockchain
+            it stores the blocks that came early while searching for the current one.
+            
+            meaning you could potentially have several blocks in memory
+            depending on the state of the blockchain.
+            """
+            previous_hash = None
+            early_block_pool = {}
+            blockchain_generator = self.get_unordered_blocks()
+            block_height = 0
+            while True:
+                block_height = block_height + 1
+                #checking if next block is not already in the early_block_pool
+                if len(early_block_pool) != 0:
+                    try:
+                        wanted_early_block = early_block_pool[previous_hash]
+                        del early_block_pool[previous_hash]
+                        previous_hash = wanted_early_block.hash
+                        wanted_early_block.height = block_height - 1
+                        yield wanted_early_block
+                        continue
+                    except KeyError:
+                        pass
+
+                #was not in the early_block_pool, reading new block from drive
+                current_block = blockchain_generator.next()
+
+                #special case, looking for genesis block
+                if previous_hash is None:
+                    if current_block.hash == BITCOIN_GENESIS_BLOCK_HASH:
+                        previous_hash = current_block.hash
+                        current_block.height = block_height - 1
+                        yield current_block
+                        continue
+                    else:
+                        early_block_pool[current_block.header.previous_block_hash] = current_block
+                #normal case, checking if read block is the next one, goes into the early_block_pool otherwhise
+                else:
+                    if current_block.header.previous_block_hash == previous_hash:
+                        previous_hash = current_block.hash
+                        current_block.height = block_height - 1
+                        yield current_block
+                        continue
+                    else:
+                        early_block_pool[current_block.header.previous_block_hash] = current_block
