@@ -86,13 +86,16 @@ class Blockchain(object):
             previous_hash = None
             early_block_pool = {}
             blockchain_generator = self.get_unordered_blocks()
+            block_height = 0
             while True:
+                block_height = block_height + 1
                 #checking if next block is not already in the early_block_pool
                 if len(early_block_pool) != 0:
                     try:
                         wanted_early_block = early_block_pool[previous_hash]
                         del early_block_pool[previous_hash]
                         previous_hash = wanted_early_block.hash
+                        wanted_early_block.height = block_height - 1
                         yield wanted_early_block
                         continue
                     except KeyError:
@@ -105,6 +108,7 @@ class Blockchain(object):
                 if previous_hash is None:
                     if current_block.hash == BITCOIN_GENESIS_BLOCK_HASH:
                         previous_hash = current_block.hash
+                        current_block.height = block_height - 1
                         yield current_block
                         continue
                     else:
@@ -113,6 +117,7 @@ class Blockchain(object):
                 else:
                     if current_block.header.previous_block_hash == previous_hash:
                         previous_hash = current_block.hash
+                        current_block.height = block_height - 1
                         yield current_block
                         continue
                     else:
