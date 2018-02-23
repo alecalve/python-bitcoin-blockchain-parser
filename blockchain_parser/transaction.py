@@ -23,14 +23,24 @@ class Transaction(object):
 
     def __init__(self, raw_hex):
         self._hash = None
+        self._txid = None
         self.inputs = None
         self.outputs = None
         self._version = None
         self._locktime = None
         self.n_inputs = 0
         self.n_outputs = 0
+        self.is_segwit = False
 
         offset = 4
+
+        # adds basic support for segwit transactions
+        #   - https://bitcoincore.org/en/segwit_wallet_dev/
+        #   - https://en.bitcoin.it/wiki/Protocol_documentation#BlockTransactions
+        if b'\x00\x01' == raw_hex[offset:offset + 2]:
+            self.is_segwit = True
+            offset += 2
+
         self.n_inputs, varint_size = decode_varint(raw_hex[offset:])
         offset += varint_size
 
@@ -48,6 +58,18 @@ class Transaction(object):
             output = Output.from_hex(raw_hex[offset:])
             offset += output.size
             self.outputs.append(output)
+
+        if self.is_segwit:
+            self._offset_before_tx_witnesses = offset
+            for inp in self.inputs:
+                tx_witnesses_n, varint_size = decode_varint(raw_hex[offset:])
+                offset += varint_size
+                for j in range(tx_witnesses_n):
+                    component_length, varint_size = decode_varint(raw_hex[offset:])
+                    offset += varint_size
+                    witness = raw_hex[offset:offset+component_length]
+                    inp.add_witness(witness)
+                    offset += component_length
 
         self.size = offset + 4
         self.hex = raw_hex[:self.size]
@@ -77,8 +99,39 @@ class Transaction(object):
     def hash(self):
         """Returns the transaction's hash"""
         if self._hash is None:
-            self._hash = format_hash(double_sha256(self.hex))
+            # segwit transactions have two transaction ids/hashes, txid and wtxid
+            # txid is a hash of all of the legacy transaction fields only
+            if self.is_segwit:
+                txid = self.hex[:4] + self.hex[6:self._offset_before_tx_witnesses] + self.hex[-4:]
+            else:
+                txid = self.hex
+            self._hash = format_hash(double_sha256(txid))
+
         return self._hash
+
+    @property
+    def hash(self):
+        """Returns the transaction's id. Equivalent to the hash for non SegWit transactions,
+        it differs from it for SegWit ones. """
+        if self._hash is None:
+            self._hash = format_hash(double_sha256(self.hex))
+
+        return self._hash
+
+    @property
+    def txid(self):
+        """Returns the transaction's id. Equivalent to the hash for non SegWit transactions,
+        it differs from it for SegWit ones. """
+        if self._txid is None:
+            # segwit transactions have two transaction ids/hashes, txid and wtxid
+            # txid is a hash of all of the legacy transaction fields only
+            if self.is_segwit:
+                txid_data = self.hex[:4] + self.hex[6:self._offset_before_tx_witnesses] + self.hex[-4:]
+            else:
+                txid_data = self.hex
+            self._txid = format_hash(double_sha256(txid_data))
+
+        return self._txid
 
     def is_coinbase(self):
         """Returns whether the transaction is a coinbase transaction"""
