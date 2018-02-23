@@ -7,7 +7,7 @@ BLOCK_HAVE_UNDO = 16
 
 def readVarInt(raw_hex):
     """
-    Reads the wierd format of VarInt present in src/serialize.h of bitcoin core
+    Reads the weird format of VarInt present in src/serialize.h of bitcoin core
     and being used for storing data in the leveldb.
     This is not the VARINT format described for general bitcoin serialization
     use.

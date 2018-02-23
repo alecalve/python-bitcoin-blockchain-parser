@@ -13,7 +13,8 @@ import os
 import mmap
 import struct
 import stat
-import leveldb
+import plyvel
+import binascii
 
 from .block import Block
 from .index import DBBlockIndex
@@ -95,9 +96,10 @@ class Blockchain(object):
         This function also provides caching of indexes.
         """
         if self.indexPath != index:
-            db = leveldb.LevelDB(index)
-            self.blockIndexes = [DBBlockIndex(format_hash(k[1:]), v)
-                    for k, v in db.RangeIter() if k[0] == ord('b')]
+            db = plyvel.DB(index, compression=None)
+            self.blockIndexes = [DBBlockIndex(format_hash(k[1:]), bytearray(v))
+                    for k, v in db.iterator() if k[0] == 'b']
+            db.close()
             self.blockIndexes.sort(key = lambda x: x.height)
             self.indexPath = index
         return self.blockIndexes
