@@ -14,7 +14,6 @@ import mmap
 import struct
 import stat
 import plyvel
-import binascii
 
 from .block import Block
 from .index import DBBlockIndex
@@ -113,6 +112,11 @@ class Blockchain(object):
 
         if end is None:
             end = len(blockIndexes)
+
+        if end < start:
+            blockIndexes = list(reversed(blockIndexes))
+            start = len(blockIndexes) - start
+            end = len(blockIndexes) - end
 
         for blkIdx in blockIndexes[start:end]:
             blkFile = os.path.join(self.path, "blk%05d.dat" % blkIdx.nFile)
