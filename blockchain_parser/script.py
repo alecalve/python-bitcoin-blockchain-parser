@@ -87,7 +87,7 @@ class Script(object):
                         representations.append(str(operation))
 
                 self._value = " ".join(representations)
-            except CScriptInvalidError as e:
+            except CScriptInvalidError:
                 self._value = "INVALID_SCRIPT"
 
         return self._value
