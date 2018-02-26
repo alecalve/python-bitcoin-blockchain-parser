@@ -12,8 +12,12 @@
 import os
 import mmap
 import struct
+import stat
+import plyvel
 
 from .block import Block
+from .index import DBBlockIndex
+from .utils import format_hash
 
 
 # Constant separating blocks in the .blk files
@@ -25,6 +29,8 @@ def get_files(path):
     Given the path to the .bitcoin directory, returns the sorted list of .blk
     files contained in that directory
     """
+    if not stat.S_ISDIR(os.stat(path)[stat.ST_MODE]):
+        return [path]
     files = os.listdir(path)
     files = [f for f in files if f.startswith("blk") and f.endswith(".dat")]
     files = map(lambda x: os.path.join(path, x), files)
@@ -57,6 +63,13 @@ def get_blocks(blockfile):
                 offset += 1
         raw_data.close()
 
+def get_block(blockfile, offset):
+    """Extracts a single block from the blockfile at the given offset"""
+    with open(blockfile, "rb") as f:
+        f.seek(offset - 4) # Size is present 4 bytes before the db offset
+        size, = struct.unpack("<I", f.read(4))
+        return f.read(size)
+
 
 class Blockchain(object):
     """Represent the blockchain contained in the series of .blk files
@@ -65,6 +78,8 @@ class Blockchain(object):
 
     def __init__(self, path):
         self.path = path
+        self.blockIndexes = None
+        self.indexPath = None
 
     def get_unordered_blocks(self):
         """Yields the blocks contained in the .blk files as is,
@@ -73,3 +88,36 @@ class Blockchain(object):
         for blk_file in get_files(self.path):
             for raw_block in get_blocks(blk_file):
                 yield Block(raw_block)
+
+    def __getBlockIndexes(self, index):
+        """There is no method of leveldb to close the db (and release the lock).
+        This creates problem during concurrent operations.
+        This function also provides caching of indexes.
+        """
+        if self.indexPath != index:
+            db = plyvel.DB(index, compression=None)
+            self.blockIndexes = [DBBlockIndex(format_hash(k[1:]), bytearray(v))
+                    for k, v in db.iterator() if k[0] == 'b']
+            db.close()
+            self.blockIndexes.sort(key = lambda x: x.height)
+            self.indexPath = index
+        return self.blockIndexes
+
+    def get_ordered_blocks(self, index, start=0, end=None):
+        """Yields the blocks contained in the .blk files as per
+        the heigt extract from the leveldb index present at path
+        index maintained by bitcoind.
+        """
+        blockIndexes = self.__getBlockIndexes(index)
+
+        if end is None:
+            end = len(blockIndexes)
+
+        if end < start:
+            blockIndexes = list(reversed(blockIndexes))
+            start = len(blockIndexes) - start
+            end = len(blockIndexes) - end
+
+        for blkIdx in blockIndexes[start:end]:
+            blkFile = os.path.join(self.path, "blk%05d.dat" % blkIdx.nFile)
+            yield Block(get_block(blkFile, blkIdx.dataPos), blkIdx.height)

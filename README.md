@@ -19,15 +19,34 @@ for block in blockchain.get_unordered_blocks():
     for tx in block.transactions:
         for no, output in enumerate(tx.outputs):
             print("tx=%s outputno=%d type=%s value=%s" % (tx.hash, no, output.type, output.value))
+
+# To get the blocks ordered by height, you need to provide the path of the
+# `index` directory (LevelDB index) being maintained by bitcoind. It contains
+# .ldb files and is present inside the `blocks` directory.
+for block in blockchain.get_ordered_blocks(sys.argv[1] + '/index', end=1000):
+    print("height=%d block=%s" % (block.height, block.hash))
+
+# Blocks can be iterated in reverse by specifying a start parameter that is 
+# greater than the end parameter.
+for block in blockchain.get_ordered_blocks(sys.argv[1] + '/index', start=510000, end=0):
+    print("height=%d block=%s" % (block.height, block.hash))
 ```
 
 More examples are available in the examples directory.
 
 ## Installing
 
-Requirements : python-bitcoinlib, coverage for tests
+Requirements : python-bitcoinlib, plyvel, coverage for tests
 
-To install, just run
+plyvel requires leveldb development libraries for LevelDB >1.2.X
+
+On Linux, install libleveldb-dev
+
+```
+sudo apt-get install libleveldb-dev
+```
+
+Then, just run
 ```
 python setup.py install
 ```
