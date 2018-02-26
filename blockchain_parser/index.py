@@ -52,7 +52,10 @@ class DBBlockIndex(object):
             pos += i
 
         assert(pos + 80 == len(raw_hex))
-        self.version, p, m, time, bits, self.nonce = unpack("<I32s32sIII", raw_hex[-80:])
+        self.version, p, m, time, bits, self.nonce = unpack(
+            "<I32s32sIII",
+            raw_hex[-80:]
+        )
         self.prev_hash = format_hash(p)
         self.merkle_root = format_hash(m)
 

@@ -78,15 +78,15 @@ class Script(object):
     def value(self):
         """Returns a string representation of the script"""
         if self._value is None:
-            representations = []
+            parts = []
             try:
                 for operation in self.operations:
                     if isinstance(operation, bytes):
-                        representations.append(b2a_hex(operation).decode("ascii"))
+                        parts.append(b2a_hex(operation).decode("ascii"))
                     else:
-                        representations.append(str(operation))
+                        parts.append(str(operation))
 
-                self._value = " ".join(representations)
+                self._value = " ".join(parts)
             except CScriptInvalidError:
                 self._value = "INVALID_SCRIPT"
 
