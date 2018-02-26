@@ -119,5 +119,5 @@ class Blockchain(object):
             end = len(blockIndexes) - end
 
         for blkIdx in blockIndexes[start:end]:
-            blkFile = os.path.join(self.path, "blk%05d.dat" % blkIdx.nFile)
-            yield Block(get_block(blkFile, blkIdx.dataPos), blkIdx.height)
+            blkFile = os.path.join(self.path, "blk%05d.dat" % blkIdx.file)
+            yield Block(get_block(blkFile, blkIdx.data_pos), blkIdx.height)
