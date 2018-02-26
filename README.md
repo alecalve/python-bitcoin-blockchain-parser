@@ -36,9 +36,17 @@ More examples are available in the examples directory.
 
 ## Installing
 
-Requirements : python-bitcoinlib, coverage for tests
+Requirements : python-bitcoinlib, plyvel, coverage for tests
 
-To install, just run
+plyvel requires leveldb development libraries for LevelDB >1.2.X
+
+On Linux, install libleveldb-dev
+
+```
+sudo apt-get install libleveldb-dev
+```
+
+Then, just run
 ```
 python setup.py install
 ```
