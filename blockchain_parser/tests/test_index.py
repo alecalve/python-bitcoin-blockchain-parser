@@ -1,8 +1,8 @@
 import unittest
 from binascii import a2b_hex
-from datetime import datetime
 
 from blockchain_parser.index import DBBlockIndex
+
 
 class TestDBIndex(unittest.TestCase):
     def test_from_hex(self):
@@ -20,10 +20,10 @@ class TestDBIndex(unittest.TestCase):
         self.assertEqual(idx.height, 332802)
         self.assertEqual(idx.status, 29)
         self.assertEqual(idx.n_tx, 352)
-        self.assertEqual(idx.nFile, 202)
-        self.assertEqual(idx.dataPos, 90357377)
-        self.assertEqual(idx.undoPos, 13497502)
+        self.assertEqual(idx.file, 202)
+        self.assertEqual(idx.data_pos, 90357377)
+        self.assertEqual(idx.undo_pos, 13497502)
         self.assertEqual(idx.version, 2)
-        self.assertEqual(idx.nounce, 1101799037)
-        self.assertEqual(idx.prevHash, "00000000000000000792a44ad057029301f3eb593a8e50c3805ffae1319275fb")
-        self.assertEqual(idx.merkelroot, "e34721a2587695e74caf820006d2e8c1f5f54350b49d97e74b26f87ac66b1cc1")
+        self.assertEqual(idx.nonce, 1101799037)
+        self.assertEqual(idx.prev_hash, "00000000000000000792a44ad057029301f3eb593a8e50c3805ffae1319275fb")
+        self.assertEqual(idx.merkle_root, "e34721a2587695e74caf820006d2e8c1f5f54350b49d97e74b26f87ac66b1cc1")
