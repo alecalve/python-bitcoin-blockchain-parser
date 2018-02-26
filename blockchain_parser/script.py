@@ -11,7 +11,6 @@
 
 from bitcoin.core.script import *
 from binascii import b2a_hex
-from .utils import to_int
 
 
 def is_public_key(hex_data):
@@ -23,11 +22,11 @@ def is_public_key(hex_data):
         return False
 
     # Uncompressed public key
-    if len(hex_data) == 65 and to_int(hex_data[0]) == 4:
+    if len(hex_data) == 65 and int(hex_data[0]) == 4:
         return True
 
     # Compressed public key
-    if len(hex_data) == 33 and to_int(hex_data[0]) in [2, 3]:
+    if len(hex_data) == 33 and int(hex_data[0]) in [2, 3]:
         return True
 
     return False
@@ -79,16 +78,16 @@ class Script(object):
     def value(self):
         """Returns a string representation of the script"""
         if self._value is None:
-            representations = []
+            parts = []
             try:
                 for operation in self.operations:
                     if isinstance(operation, bytes):
-                        representations.append(b2a_hex(operation).decode("ascii"))
+                        parts.append(b2a_hex(operation).decode("ascii"))
                     else:
-                        representations.append(str(operation))
+                        parts.append(str(operation))
 
-                self._value = " ".join(representations)
-            except CScriptInvalidError as e:
+                self._value = " ".join(parts)
+            except CScriptInvalidError:
                 self._value = "INVALID_SCRIPT"
 
         return self._value

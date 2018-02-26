@@ -7,6 +7,7 @@ python:
   - "3.3"
   - "3.4"
   - "3.5"
+  - "3.6"
 
 before_install:
   - ./travis.sh
@@ -19,6 +20,6 @@ script:
   - coverage run --append --include='blockchain_parser/*' --omit='*/tests/*' setup.py test
 
 after_success:
-  - if [[ $ENV == python=3.4* ]]; then
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.6' ]]; then
           coveralls;
     fi
