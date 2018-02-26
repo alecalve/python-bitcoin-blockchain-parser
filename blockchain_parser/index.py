@@ -5,7 +5,8 @@ from .utils import format_hash
 BLOCK_HAVE_DATA = 8
 BLOCK_HAVE_UNDO = 16
 
-def readVarInt(raw_hex):
+
+def _read_varint(raw_hex):
     """
     Reads the weird format of VarInt present in src/serialize.h of bitcoin core
     and being used for storing data in the leveldb.
@@ -15,44 +16,49 @@ def readVarInt(raw_hex):
     n = 0
     pos = 0
     while True:
-        chData = raw_hex[pos]
+        data = raw_hex[pos]
         pos += 1
-        n = (n << 7) | (chData & 0x7f)
-        if chData & 0x80 == 0:
-            return (n, pos)
+        n = (n << 7) | (data & 0x7f)
+        if data & 0x80 == 0:
+            return n, pos
         n += 1
 
-class DBBlockIndex():
+
+class DBBlockIndex(object):
     def __init__(self, blk_hash, raw_hex):
         self.hash = blk_hash
         pos = 0
-        nVersion, i = readVarInt(raw_hex[pos:])
+        n_version, i = _read_varint(raw_hex[pos:])
         pos += i
-        self.height, i = readVarInt(raw_hex[pos:])
+        self.height, i = _read_varint(raw_hex[pos:])
         pos += i
-        self.status, i = readVarInt(raw_hex[pos:])
+        self.status, i = _read_varint(raw_hex[pos:])
         pos += i
-        self.n_tx, i = readVarInt(raw_hex[pos:])
+        self.n_tx, i = _read_varint(raw_hex[pos:])
         pos += i
         if self.status & (BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO):
-            self.nFile, i = readVarInt(raw_hex[pos:])
+            self.file, i = _read_varint(raw_hex[pos:])
             pos += i
         else:
-            self.nFile = -1
+            self.file = -1
 
         if self.status & BLOCK_HAVE_DATA:
-            self.dataPos, i = readVarInt(raw_hex[pos:])
+            self.data_pos, i = _read_varint(raw_hex[pos:])
             pos += i
         else:
-            dataPos = -1
+            self.data_pos = -1
         if self.status & BLOCK_HAVE_UNDO:
-            self.undoPos, i = readVarInt(raw_hex[pos:])
+            self.undo_pos, i = _read_varint(raw_hex[pos:])
             pos += i
 
         assert(pos + 80 == len(raw_hex))
-        self.version, pHashi, mHashi, time, bits, self.nounce = unpack("<I32s32sIII", raw_hex[-80:])
-        self.prevHash = format_hash(pHashi)
-        self.merkelroot = format_hash(mHashi)
+        self.version, p, m, time, bits, self.nonce = unpack(
+            "<I32s32sIII",
+            raw_hex[-80:]
+        )
+        self.prev_hash = format_hash(p)
+        self.merkle_root = format_hash(m)
 
     def __repr__(self):
-        return "DBBlockIndex(%s, height=%d, file_no=%d, file_pos=%d)" % (self.hash, self.height, self.nFile, self.dataPos)
+        return "DBBlockIndex(%s, height=%d, file_no=%d, file_pos=%d)" \
+               % (self.hash, self.height, self.file, self.data_pos)

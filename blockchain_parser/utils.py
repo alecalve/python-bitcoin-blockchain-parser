@@ -11,14 +11,7 @@
 
 from binascii import hexlify
 import hashlib
-import sys
 import struct
-
-
-if sys.version > '3':
-    to_int = lambda x: int(x)
-else:
-    to_int = ord
 
 
 def btc_ripemd160(data):
@@ -48,13 +41,12 @@ def decode_uint64(data):
 
 def decode_varint(data):
     assert(len(data) > 0)
-    size = to_int(data[0])
+    size = int(data[0])
     assert(size <= 255)
 
     if size < 253:
         return size, 1
 
-    format_ = None
     if size == 253:
         format_ = '<H'
     elif size == 254:
