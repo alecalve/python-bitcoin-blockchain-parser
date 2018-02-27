@@ -119,5 +119,7 @@ class Blockchain(object):
             end = len(blockIndexes) - end
 
         for blkIdx in blockIndexes[start:end]:
+            if blkIdx.file == -1 or blkIdx.data_pos == -1:
+                break
             blkFile = os.path.join(self.path, "blk%05d.dat" % blkIdx.file)
             yield Block(get_block(blkFile, blkIdx.data_pos), blkIdx.height)
