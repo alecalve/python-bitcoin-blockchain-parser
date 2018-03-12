@@ -12,6 +12,7 @@
 import os
 import mmap
 import struct
+import pickle
 import stat
 import plyvel
 
@@ -145,12 +146,26 @@ class Blockchain(object):
                     if first_block.hash in chain: return True
                     else: return False
 
-    def get_ordered_blocks(self, index, start=0, end=None):
+    def get_ordered_blocks(self, index, start=0, end=None, cache=None):
         """Yields the blocks contained in the .blk files as per
         the heigt extract from the leveldb index present at path
         index maintained by bitcoind.
         """
-        blockIndexes = self.__getBlockIndexes(index)
+
+        blockIndexes = None
+
+        if cache and os.path.exists(cache):
+            # load the block index cache from a previous index
+            with open(cache, 'rb') as f:
+                blockIndexes = pickle.load(f)
+
+        if blockIndexes == None:
+            # build the block index
+            blockIndexes = self.__getBlockIndexes(index)
+            if cache and not os.path.exists(cache):
+                # cache the block index for re-use next time
+                with open(cache, 'wb') as f:
+                    pickle.dump(blockIndexes, f)        
 
         # remove small forks that may have occured while the node was running live.
         # Occassionally a node will receive two different solutions to the next block
