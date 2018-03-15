@@ -12,6 +12,7 @@
 import os
 import mmap
 import struct
+import pickle
 import stat
 import plyvel
 
@@ -63,10 +64,11 @@ def get_blocks(blockfile):
                 offset += 1
         raw_data.close()
 
+
 def get_block(blockfile, offset):
     """Extracts a single block from the blockfile at the given offset"""
     with open(blockfile, "rb") as f:
-        f.seek(offset - 4) # Size is present 4 bytes before the db offset
+        f.seek(offset - 4)  # Size is present 4 bytes before the db offset
         size, = struct.unpack("<I", f.read(4))
         return f.read(size)
 
@@ -97,9 +99,9 @@ class Blockchain(object):
         if self.indexPath != index:
             db = plyvel.DB(index, compression=None)
             self.blockIndexes = [DBBlockIndex(format_hash(k[1:]), v)
-                    for k, v in db.iterator() if k[0] == ord('b')]
+                                 for k, v in db.iterator() if k[0] == ord('b')]
             db.close()
-            self.blockIndexes.sort(key = lambda x: x.height)
+            self.blockIndexes.sort(key=lambda x: x.height)
             self.indexPath = index
         return self.blockIndexes
 
@@ -119,17 +121,17 @@ class Blockchain(object):
 
         # loop through all future blocks
         for i, index in enumerate(chain_indexes):
-            # if this block doesn't have data don't confirm the block in question
+            # if this block doesn't have data don't confirm it
             if index.file == -1 or index.data_pos == -1:
                 return False
 
             # parse the block
             blkFile = os.path.join(self.path, "blk%05d.dat" % index.file)
             block = Block(get_block(blkFile, index.data_pos))
-            
+
             if i == 0:
                 first_block = block
-            
+
             chains.append([block.hash])
 
             for chain in chains:
@@ -137,39 +139,55 @@ class Blockchain(object):
                 # of the chains, do it
                 if chain[-1] == block.header.previous_block_hash:
                     chain.append(block.hash)
-                
-                # if we've found a chain whose length == num_dependencies (usually 6)
-                # we are ready to make a decesion on whether or not the block in
-                # question belongs to a fork or the main chain
-                if len(chain) == num_confirmations:
-                    if first_block.hash in chain: return True
-                    else: return False
 
-    def get_ordered_blocks(self, index, start=0, end=None):
+                # if we've found a chain length == num_dependencies (usually 6)
+                # we are ready to make a decesion on whether or not the block
+                # belongs to a fork or the main chain
+                if len(chain) == num_confirmations:
+                    if first_block.hash in chain:
+                        return True
+                    else:
+                        return False
+
+    def get_ordered_blocks(self, index, start=0, end=None, cache=None):
         """Yields the blocks contained in the .blk files as per
         the heigt extract from the leveldb index present at path
         index maintained by bitcoind.
         """
-        blockIndexes = self.__getBlockIndexes(index)
 
-        # remove small forks that may have occured while the node was running live.
-        # Occassionally a node will receive two different solutions to the next block
-        # at the same time. The Leveldb index seems to save both, not pruning the
-        # the block that leads to a shorter chain once the fork is settled without
+        blockIndexes = None
+
+        if cache and os.path.exists(cache):
+            # load the block index cache from a previous index
+            with open(cache, 'rb') as f:
+                blockIndexes = pickle.load(f)
+
+        if blockIndexes is None:
+            # build the block index
+            blockIndexes = self.__getBlockIndexes(index)
+            if cache and not os.path.exists(cache):
+                # cache the block index for re-use next time
+                with open(cache, 'wb') as f:
+                    pickle.dump(blockIndexes, f)
+
+        # remove small forks that may have occured while the node was live.
+        # Occassionally a node will receive two different solutions to a block
+        # at the same time. The Leveldb index saves both, not pruning the
+        # block that leads to a shorter chain once the fork is settled without
         # "-reindex"ing the bitcoind block data. This leads to at least two
         # blocks with the same height in the database.
         # We throw out blocks that don't have at least 6 other blocks on top of
         # it (6 confirmations).
-        orphans = [] # hold blocks that are orphans/forks with < 6 blocks built on top
+        orphans = []  # hold blocks that are orphans with < 6 blocks on top
         last_height = -1
         for i, blockIdx in enumerate(blockIndexes):
             if last_height > -1:
-                # if this block is the same height as the last block an orphan has
+                # if this block is the same height as the last block an orphan
                 # occurred, now we have to figure out which of the two to keep
                 if blockIdx.height == last_height:
 
-                    # loop through future blocks until we find a chain of at least
-                    # six blocks that includes this block. If we can't find one
+                    # loop through future blocks until we find a chain 6 blocks
+                    # long that includes this block. If we can't find one
                     # remove this block as it is invalid
                     if self._index_confirmed(blockIndexes[i:]):
 
@@ -184,7 +202,8 @@ class Blockchain(object):
             last_height = blockIdx.height
 
         # filter out the orphan blocks, so we are left only with block indexes
-        # that have been confirmed (or are new enough that they haven't yet been confirmed)
+        # that have been confirmed
+        # (or are new enough that they haven't yet been confirmed)
         blockIndexes = list(filter(lambda block: block.hash not in orphans, blockIndexes))
 
         if end is None:
