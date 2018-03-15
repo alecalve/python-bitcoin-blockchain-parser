@@ -146,7 +146,7 @@ class Blockchain(object):
                 if len(chain) == num_confirmations:
                     if first_block.hash in chain:
                         return True
-                    else: 
+                    else:
                         return False
 
     def get_ordered_blocks(self, index, start=0, end=None, cache=None):
