@@ -99,7 +99,7 @@ class Blockchain(object):
         if self.indexPath != index:
             db = plyvel.DB(index, compression=None)
             self.blockIndexes = [DBBlockIndex(format_hash(k[1:]), v)
-                                for k, v in db.iterator() if k[0] == ord('b')]
+                                 for k, v in db.iterator() if k[0] == ord('b')]
             db.close()
             self.blockIndexes.sort(key=lambda x: x.height)
             self.indexPath = index
@@ -144,7 +144,7 @@ class Blockchain(object):
                 # we are ready to make a decesion on whether or not the block
                 # belongs to a fork or the main chain
                 if len(chain) == num_confirmations:
-                    if first_block.hash in chain: 
+                    if first_block.hash in chain:
                         return True
                     else: 
                         return False
@@ -187,8 +187,8 @@ class Blockchain(object):
                 if blockIdx.height == last_height:
 
                     # loop through future blocks until we find a chain 6 blocks
-                    # long that includes this block. If we can't find one remove
-                    # this block as it is invalid
+                    # long that includes this block. If we can't find one
+                    # remove this block as it is invalid
                     if self._index_confirmed(blockIndexes[i:]):
 
                         # if this block is confirmed, the unconfirmed block is
@@ -202,7 +202,7 @@ class Blockchain(object):
             last_height = blockIdx.height
 
         # filter out the orphan blocks, so we are left only with block indexes
-        # that have been confirmed 
+        # that have been confirmed
         # (or are new enough that they haven't yet been confirmed)
         blockIndexes = list(filter(lambda block: block.hash not in orphans, blockIndexes))
 
