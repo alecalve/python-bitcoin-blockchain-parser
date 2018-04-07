@@ -53,11 +53,13 @@ def get_blocks(blockfile):
         length = len(raw_data)
         offset = 0
         block_count = 0
-        while offset < (length - 4):
+        while offset < (length - (4 + 4)):
             if raw_data[offset:offset+4] == BITCOIN_CONSTANT:
                 offset += 4
                 size = struct.unpack("<I", raw_data[offset:offset+4])[0]
                 offset += 4 + size
+                if offset > length: 
+                    break
                 block_count += 1
                 yield raw_data[offset-size:offset]
             else:
