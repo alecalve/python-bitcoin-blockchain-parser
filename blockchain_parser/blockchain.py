@@ -83,9 +83,18 @@ class Blockchain(object):
         self.blockIndexes = None
         self.indexPath = None
 
-    def get_unordered_blocks(self, start_from_blk_file=0):
+    def get_unordered_blocks(self):
         """Yields the blocks contained in the .blk files as is,
         without ordering them according to height.
+        """
+        for blk_file in get_files(self.path):
+            for raw_block in get_blocks(blk_file):
+                yield Block(raw_block)
+
+    def get_unordered_blocks_starting_from_blkfile(self, start=0):
+        """Yields the blocks contained in the .blk files as is,
+        without ordering them according to height starting from a
+        specific file.
         """
         for index, blk_file in enumerate(get_files(self.path)):
             if index < start_from_blk_file:
