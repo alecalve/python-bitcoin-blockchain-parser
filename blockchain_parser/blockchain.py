@@ -91,17 +91,20 @@ class Blockchain(object):
             for raw_block in get_blocks(blk_file):
                 yield Block(raw_block)
 
-    def get_unordered_blocks_starting_from_blkfile(self, start=0):
-        """Yields the blocks contained in the .blk files as is,
-        without ordering them according to height starting from a
-        specific file.
+    def get_unordered_blocks_from(self, blk_file_idx=0, unordered_block_position=0):
+        """Yields a tuple containing the blk files index, blocks postion in the file,
+        and the block from the .blk file as is, without ordering them according to height.
         """
         for index, blk_file in enumerate(get_files(self.path)):
-            if index < start_from_blk_file:
+            if index < blk_file_idx:
                 continue
             else:
-                for raw_block in get_blocks(blk_file):
-                    yield Block(raw_block)
+                for block_position, raw_block in enumerate(get_blocks(blk_file)):
+                    if block_position < unordered_block_position:
+                        continue
+                    else:
+                        yield index, block_position, Block(raw_block)
+                unordered_block_position = 0
 
     def __getBlockIndexes(self, index):
         """There is no method of leveldb to close the db (and release the lock).
