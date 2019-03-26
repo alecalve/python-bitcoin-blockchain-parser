@@ -135,7 +135,7 @@ class Transaction(object):
 
     def is_coinbase(self):
         """Returns whether the transaction is a coinbase transaction"""
-        return len(self.inputs) == 1 and self.inputs[0].transaction_hash == "0" * 64:
+        return len(self.inputs) == 1 and self.inputs[0].transaction_hash == "0" * 64
 
     def uses_replace_by_fee(self):
         """Returns whether the transaction opted-in for RBF"""
