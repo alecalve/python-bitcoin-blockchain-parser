@@ -26,8 +26,15 @@ def get_block_transactions(raw_hex):
     n_transactions, offset = decode_varint(transaction_data)
 
     for i in range(n_transactions):
-        transaction = Transaction.from_hex(transaction_data[offset:])
-        yield transaction
+        # Try from 1024 (1KiB) -> 1073741824 (1GiB) slice widths
+        for j in range(0, 20):
+            try:
+                offset_e = offset + (1024 * 2 ** j)
+                transaction = Transaction.from_hex(transaction_data[offset:offset_e])
+                yield transaction
+                break
+            except:
+                continue
 
         # Skipping to the next transaction
         offset += transaction.size
