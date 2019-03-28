@@ -65,14 +65,18 @@ class Transaction(object):
                 tx_witnesses_n, varint_size = decode_varint(raw_hex[offset:])
                 offset += varint_size
                 for j in range(tx_witnesses_n):
-                    component_length, varint_size = decode_varint(raw_hex[offset:])
+                    component_length, varint_size = decode_varint(
+                        raw_hex[offset:])
                     offset += varint_size
-                    witness = raw_hex[offset:offset+component_length]
+                    witness = raw_hex[offset:offset + component_length]
                     inp.add_witness(witness)
                     offset += component_length
 
         self.size = offset + 4
         self.hex = raw_hex[:self.size]
+
+        if self.size != len(self.hex):
+            raise Exception("Incomplete transaction!")
 
     def __repr__(self):
         return "Transaction(%s)" % self.hash
@@ -102,7 +106,9 @@ class Transaction(object):
             # segwit transactions have two transaction ids/hashes, txid and wtxid
             # txid is a hash of all of the legacy transaction fields only
             if self.is_segwit:
-                txid = self.hex[:4] + self.hex[6:self._offset_before_tx_witnesses] + self.hex[-4:]
+                txid = self.hex[:4] + self.hex[
+                                      6:self._offset_before_tx_witnesses] + self.hex[
+                                                                            -4:]
             else:
                 txid = self.hex
             self._hash = format_hash(double_sha256(txid))
@@ -126,7 +132,9 @@ class Transaction(object):
             # segwit transactions have two transaction ids/hashes, txid and wtxid
             # txid is a hash of all of the legacy transaction fields only
             if self.is_segwit:
-                txid_data = self.hex[:4] + self.hex[6:self._offset_before_tx_witnesses] + self.hex[-4:]
+                txid_data = self.hex[:4] + self.hex[
+                                           6:self._offset_before_tx_witnesses] + self.hex[
+                                                                                 -4:]
             else:
                 txid_data = self.hex
             self._txid = format_hash(double_sha256(txid_data))

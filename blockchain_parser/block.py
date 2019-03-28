@@ -30,7 +30,8 @@ def get_block_transactions(raw_hex):
         for j in range(0, 20):
             try:
                 offset_e = offset + (1024 * 2 ** j)
-                transaction = Transaction.from_hex(transaction_data[offset:offset_e])
+                transaction = Transaction.from_hex(
+                    transaction_data[offset:offset_e])
                 yield transaction
                 break
             except:
@@ -45,7 +46,7 @@ class Block(object):
     Represents a Bitcoin block, contains its header and its transactions.
     """
 
-    def __init__(self, raw_hex, height = None):
+    def __init__(self, raw_hex, height=None):
         self.hex = raw_hex
         self._hash = None
         self._transactions = None
