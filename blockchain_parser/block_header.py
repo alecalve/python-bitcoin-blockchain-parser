@@ -21,9 +21,15 @@ class BlockHeader(object):
 
     def __init__(self, raw_hex):
         self._hex = raw_hex[:80]
-        self._version, self._previous_block_hash, self._merkle_root,\
-        self._timestamp, self._bits, self._nonce = struct.unpack("<I32s32sIII", self._hex)
-        self._previous_block_hash, self._merkle_root = format_hash(self._previous_block_hash), format_hash(self._merkle_root)
+        self._version,\
+            self._previous_block_hash,\
+            self._merkle_root,\
+            self._timestamp,\
+            self._bits,\
+            self._nonce = struct.unpack("<I32s32sIII", self._hex)
+        self._previous_block_hash,\
+            self._merkle_root = format_hash(self._previous_block_hash),\
+            format_hash(self._merkle_root)
         self._difficulty = CBlockHeader.calc_difficulty(self._bits)
 
     def __repr__(self):
@@ -51,9 +57,9 @@ class BlockHeader(object):
         return self._merkle_root
     
     @property
-    def timestamp(self, utc = False):
+    def timestamp(self, utc=False):
         """Returns the timestamp of the block as a UTC datetime object"""
-        if utc == True:
+        if utc:
             return datetime.utcfromtimestamp(self._timestamp)
         return self._timestamp
     
