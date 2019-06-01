@@ -86,5 +86,5 @@ class Block(object):
     def header(self):
         """Returns a BlockHeader object corresponding to this block"""
         if self._header is None:
-            self._header = BlockHeader.from_hex(self.hex[:80])
+            self._header = BlockHeader(self.hex[:80])
         return self._header
