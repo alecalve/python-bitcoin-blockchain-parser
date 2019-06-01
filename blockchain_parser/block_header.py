@@ -32,14 +32,6 @@ class BlockHeader(object):
             format_hash(self._merkle_root)
         self._difficulty = CBlockHeader.calc_difficulty(self._bits)
 
-    def __repr__(self):
-        return "BlockHeader(previous_block_hash=%s)" % self.previous_block_hash
-
-    @classmethod
-    def from_hex(cls, raw_hex):
-        """Builds a BlockHeader object from its bytes representation"""
-        return cls(raw_hex)
-
     # GETTER Functions
     @property
     def version(self):
