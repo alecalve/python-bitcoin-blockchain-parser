@@ -47,6 +47,11 @@ class Block(object):
         self.size = len(raw_hex)
         self.height = height
 
+    @classmethod
+    def from_hex(cls, raw_hex):
+        """Builds a block object from its bytes representation"""
+        return cls(raw_hex)
+
     @property
     def hash(self):
         """Returns the block's hash (double sha256 of its 80 bytes header"""
