@@ -40,23 +40,16 @@ class Block(object):
 
     def __init__(self, raw_hex, height = None):
         self.hex = raw_hex
-        self._hash = None
-        self._transactions = None
-        self._header = None
-        self._n_transactions = None
+        self._hash = format_hash(double_sha256(self.hex[:80]))
+        self._header = BlockHeader(self.hex[:80])
+        self._n_transactions = decode_varint(self.hex[80:])[0]
+        self._transactions = list(get_block_transactions(self.hex))
         self.size = len(raw_hex)
         self.height = height
-
-    @classmethod
-    def from_hex(cls, raw_hex):
-        """Builds a block object from its bytes representation"""
-        return cls(raw_hex)
 
     @property
     def hash(self):
         """Returns the block's hash (double sha256 of its 80 bytes header"""
-        if self._hash is None:
-            self._hash = format_hash(double_sha256(self.hex[:80]))
         return self._hash
 
     @property
@@ -65,23 +58,15 @@ class Block(object):
         it is faster to use this than to use len(block.transactions)
         as there's no need to parse all transactions to get this information
         """
-        if self._n_transactions is None:
-            self._n_transactions = decode_varint(self.hex[80:])[0]
-
         return self._n_transactions
 
     @property
     def transactions(self):
         """Returns a list of the block's transactions represented
         as Transaction objects"""
-        if self._transactions is None:
-            self._transactions = list(get_block_transactions(self.hex))
-
         return self._transactions
 
     @property
     def header(self):
         """Returns a BlockHeader object corresponding to this block"""
-        if self._header is None:
-            self._header = BlockHeader(self.hex[:80])
         return self._header
