@@ -47,9 +47,6 @@ class Block(object):
         self.size = len(raw_hex)
         self.height = height
 
-    def __repr__(self):
-        return "Block(%s)" % self.hash
-
     @classmethod
     def from_hex(cls, raw_hex):
         """Builds a block object from its bytes representation"""
