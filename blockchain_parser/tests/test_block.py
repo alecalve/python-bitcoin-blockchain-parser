@@ -43,7 +43,7 @@ class TestBlock(unittest.TestCase):
         self.assertEqual(1, block.header.version)
         self.assertEqual(1, block.header.difficulty)
         self.assertEqual(285, block.size)
-        self.assertEqual(datetime.utcfromtimestamp(1231006505),
+        self.assertEqual(1231006505,
                          block.header.timestamp)
         self.assertEqual("0" * 64, block.header.previous_block_hash)
 
