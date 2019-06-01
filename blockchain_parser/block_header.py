@@ -39,28 +39,34 @@ class BlockHeader(object):
     def version(self):
         """Return the block's version"""
         return self._version
+    
     @property
     def previous_block_hash(self):
         """Return the hash of the previous block"""
         return self._previous_block_hash
+    
     @property
     def merkle_root(self):
         """Returns the block's merkle root"""
         return self._merkle_root
+    
     @property
     def timestamp(self, utc = False):
         """Returns the timestamp of the block as a UTC datetime object"""
         if utc == True:
             return datetime.utcfromtimestamp(self._timestamp)
         return self._timestamp
+    
     @property
     def bits(self):
         """Returns the bits (difficulty target) of the block"""
         return self._bits
+    
     @property
     def nonce(self):
         """Returns the block's nonce"""
         return self._nonce
+    
     @property
     def difficulty(self):
         """Returns the block's difficulty target as a float"""
