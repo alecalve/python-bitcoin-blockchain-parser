@@ -57,10 +57,8 @@ class BlockHeader(object):
         return self._merkle_root
 
     @property
-    def timestamp(self, utc=False):
+    def timestamp(self):
         """Returns the timestamp of the block as a UTC datetime object"""
-        if utc:
-            return datetime.utcfromtimestamp(self._timestamp)
         return self._timestamp
 
     @property
