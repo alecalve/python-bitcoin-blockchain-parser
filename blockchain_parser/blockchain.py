@@ -8,21 +8,18 @@
 # No part of bitcoin-blockchain-parser, including this file, may be copied,
 # modified, propagated, or distributed except according to the terms contained
 # in the LICENSE file.
-
-import os
 import mmap
-import struct
+import os
 import pickle
 import stat
+import struct
+
 import plyvel
 
+from . import BITCOIN
 from .block import Block
 from .index import DBBlockIndex
 from .utils import format_hash
-
-
-# Constant separating blocks in the .blk files
-BITCOIN_CONSTANT = b"\xf9\xbe\xb4\xd9"
 
 
 def get_files(path):
@@ -38,7 +35,7 @@ def get_files(path):
     return sorted(files)
 
 
-def get_blocks(blockfile):
+def get_blocks(blockfile, delim):
     """
     Given the name of a .blk file, for every block contained in the file,
     yields its raw hexadecimal value
@@ -54,7 +51,7 @@ def get_blocks(blockfile):
         offset = 0
         block_count = 0
         while offset < (length - 4):
-            if raw_data[offset:offset+4] == BITCOIN_CONSTANT:
+            if raw_data[offset:offset+4] == delim:
                 offset += 4
                 size = struct.unpack("<I", raw_data[offset:offset+4])[0]
                 offset += 4 + size
@@ -78,8 +75,9 @@ class Blockchain(object):
     maintained by bitcoind.
     """
 
-    def __init__(self, path):
+    def __init__(self, path, type=BITCOIN):
         self.path = path
+        self.type = type
         self.blockIndexes = None
         self.indexPath = None
 
@@ -88,8 +86,8 @@ class Blockchain(object):
         without ordering them according to height.
         """
         for blk_file in get_files(self.path):
-            for raw_block in get_blocks(blk_file):
-                yield Block(raw_block)
+            for raw_block in get_blocks(blk_file, delim=self.type.block_delim):
+                yield Block(raw_block, self.type)
 
     def __getBlockIndexes(self, index):
         """There is no method of leveldb to close the db (and release the lock).
@@ -204,7 +202,8 @@ class Blockchain(object):
         # filter out the orphan blocks, so we are left only with block indexes
         # that have been confirmed
         # (or are new enough that they haven't yet been confirmed)
-        blockIndexes = list(filter(lambda block: block.hash not in orphans, blockIndexes))
+        blockIndexes = list(
+            filter(lambda block: block.hash not in orphans, blockIndexes))
 
         if end is None:
             end = len(blockIndexes)

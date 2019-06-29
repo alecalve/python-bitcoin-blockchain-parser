@@ -8,10 +8,9 @@
 # No part of bitcoin-blockchain-parser, including this file, may be copied,
 # modified, propagated, or distributed except according to the terms contained
 # in the LICENSE file.
-
-from .utils import decode_varint, decode_uint32, double_sha256, format_hash
 from .input import Input
 from .output import Output
+from .utils import decode_uint32, decode_varint, double_sha256, format_hash
 
 
 def bip69_sort(data):
@@ -21,7 +20,7 @@ def bip69_sort(data):
 class Transaction(object):
     """Represents a bitcoin transaction"""
 
-    def __init__(self, raw_hex):
+    def __init__(self, raw_hex, blockchain_type):
         self._hash = None
         self._txid = None
         self.inputs = None
@@ -31,6 +30,7 @@ class Transaction(object):
         self.n_inputs = 0
         self.n_outputs = 0
         self.is_segwit = False
+        self.blockchain_type = blockchain_type
 
         offset = 4
 
@@ -55,7 +55,8 @@ class Transaction(object):
 
         self.outputs = []
         for i in range(self.n_outputs):
-            output = Output.from_hex(raw_hex[offset:])
+            output = Output.from_hex(
+                raw_hex[offset:], blockchain_type=self.blockchain_type)
             offset += output.size
             self.outputs.append(output)
 
@@ -82,8 +83,8 @@ class Transaction(object):
         return "Transaction(%s)" % self.hash
 
     @classmethod
-    def from_hex(cls, hex):
-        return cls(hex)
+    def from_hex(cls, hex, blockchain_type=None):
+        return cls(hex, blockchain_type=blockchain_type)
 
     @property
     def version(self):
@@ -107,8 +108,8 @@ class Transaction(object):
             # txid is a hash of all of the legacy transaction fields only
             if self.is_segwit:
                 txid = self.hex[:4] + self.hex[
-                                      6:self._offset_before_tx_witnesses] + self.hex[
-                                                                            -4:]
+                    6:self._offset_before_tx_witnesses] + self.hex[
+                    -4:]
             else:
                 txid = self.hex
             self._hash = format_hash(double_sha256(txid))
@@ -133,8 +134,8 @@ class Transaction(object):
             # txid is a hash of all of the legacy transaction fields only
             if self.is_segwit:
                 txid_data = self.hex[:4] + self.hex[
-                                           6:self._offset_before_tx_witnesses] + self.hex[
-                                                                                 -4:]
+                    6:self._offset_before_tx_witnesses] + self.hex[
+                    -4:]
             else:
                 txid_data = self.hex
             self._txid = format_hash(double_sha256(txid_data))

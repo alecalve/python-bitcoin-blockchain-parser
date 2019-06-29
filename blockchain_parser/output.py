@@ -8,16 +8,16 @@
 # No part of bitcoin-blockchain-parser, including this file, may be copied,
 # modified, propagated, or distributed except according to the terms contained
 # in the LICENSE file.
-
-from .utils import decode_varint, decode_uint64
-from .script import Script
 from .address import Address
+from .script import Script
+from .utils import decode_uint64, decode_varint
 
 
 class Output(object):
     """Represents a Transaction output"""
 
-    def __init__(self, raw_hex):
+    def __init__(self, raw_hex, blockchain_type):
+        self.blockchain_type = blockchain_type
         self._value = None
         self._script = None
         self._addresses = None
@@ -30,8 +30,8 @@ class Output(object):
         self._value_hex = raw_hex[:8]
 
     @classmethod
-    def from_hex(cls, hex_):
-        return cls(hex_)
+    def from_hex(cls, hex_, blockchain_type=None):
+        return cls(hex_, blockchain_type=blockchain_type)
 
     def __repr__(self):
         return "Output(satoshis=%d)" % self.value
@@ -58,19 +58,23 @@ class Output(object):
         if self._addresses is None:
             self._addresses = []
             if self.type == "pubkey":
-                address = Address.from_public_key(self.script.operations[0])
+                address = Address.from_public_key(
+                    self.script.operations[0], blockchain_type=self.blockchain_type)
                 self._addresses.append(address)
             elif self.type == "pubkeyhash":
-                address = Address.from_ripemd160(self.script.operations[2])
+                address = Address.from_ripemd160(
+                    self.script.operations[2], blockchain_type=self.blockchain_type)
                 self._addresses.append(address)
             elif self.type == "p2sh":
                 address = Address.from_ripemd160(self.script.operations[1],
-                                                 type="p2sh")
+                                                 type="p2sh",
+                                                 blockchain_type=self.blockchain_type)
                 self._addresses.append(address)
             elif self.type == "multisig":
                 n = self.script.operations[-2]
                 for operation in self.script.operations[1:1+n]:
-                    self._addresses.append(Address.from_public_key(operation))
+                    self._addresses.append(Address.from_public_key(
+                        operation, blockchain_type=self.blockchain_type))
 
         return self._addresses
 
