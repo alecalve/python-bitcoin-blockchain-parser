@@ -10,32 +10,35 @@
 # in the LICENSE file.
 
 from bitcoin import base58
+
+from .blockchain import BITCOIN
 from .utils import btc_ripemd160, double_sha256
 
 
 class Address(object):
     """Represents a bitcoin address"""
 
-    def __init__(self, hash, public_key, address, type):
+    def __init__(self, hash, public_key, address, type, blockchain_type):
         self._hash = hash
         self.public_key = public_key
         self._address = address
         self.type = type
+        self.blockchain_type = blockchain_type
 
     def __repr__(self):
         return "Address(addr=%s)" % self.address
 
     @classmethod
-    def from_public_key(cls, public_key):
+    def from_public_key(cls, public_key, blockchain_type):
         """Constructs an Address object from a public key"""
-        return cls(None, public_key, None, "normal")
+        return cls(None, public_key, None, "normal", blockchain_type=blockchain_type)
 
     @classmethod
-    def from_ripemd160(cls, hash, type="normal"):
+    def from_ripemd160(cls, hash, type="normal", blockchain_type=BITCOIN):
         """Constructs an Address object from a RIPEMD-160 hash, it may be a
         normal address or a P2SH address, the latter is indicated by setting
         type to 'p2sh'"""
-        return cls(hash, None, None, type)
+        return cls(hash, None, None, type, blockchain_type=blockchain_type)
 
     @property
     def hash(self):
@@ -49,7 +52,10 @@ class Address(object):
     def address(self):
         """Returns the base58 encoded representation of this address"""
         if self._address is None:
-            version = b'\x00' if self.type == "normal" else b'\x05'
+            if self.type == 'normal':
+                version = self.blockchain_type.p2pkh_addr_version
+            else:
+                version = self.blockchain_type.p2sh_addr_version
             checksum = double_sha256(version + self.hash)
 
             self._address = base58.encode(version + self.hash + checksum[:4])

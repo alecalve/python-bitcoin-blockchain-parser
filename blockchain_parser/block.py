@@ -9,12 +9,12 @@
 # modified, propagated, or distributed except according to the terms contained
 # in the LICENSE file.
 
-from .transaction import Transaction
 from .block_header import BlockHeader
-from .utils import format_hash, decode_varint, double_sha256
+from .transaction import Transaction
+from .utils import decode_varint, double_sha256, format_hash
 
 
-def get_block_transactions(raw_hex):
+def get_block_transactions(raw_hex, blockchain_type):
     """Given the raw hexadecimal representation of a block,
     yields the block's transactions
     """
@@ -31,7 +31,7 @@ def get_block_transactions(raw_hex):
             try:
                 offset_e = offset + (1024 * 2 ** j)
                 transaction = Transaction.from_hex(
-                    transaction_data[offset:offset_e])
+                    transaction_data[offset:offset_e], blockchain_type)
                 yield transaction
                 break
             except:
@@ -46,8 +46,9 @@ class Block(object):
     Represents a Bitcoin block, contains its header and its transactions.
     """
 
-    def __init__(self, raw_hex, height=None):
+    def __init__(self, raw_hex, blockchain_type, height=None):
         self.hex = raw_hex
+        self.blockchain_type = blockchain_type
         self._hash = None
         self._transactions = None
         self._header = None
@@ -59,9 +60,9 @@ class Block(object):
         return "Block(%s)" % self.hash
 
     @classmethod
-    def from_hex(cls, raw_hex):
+    def from_hex(cls, raw_hex, blockchain_type):
         """Builds a block object from its bytes representation"""
-        return cls(raw_hex)
+        return cls(raw_hex, blockchain_type)
 
     @property
     def hash(self):
@@ -86,7 +87,8 @@ class Block(object):
         """Returns a list of the block's transactions represented
         as Transaction objects"""
         if self._transactions is None:
-            self._transactions = list(get_block_transactions(self.hex))
+            self._transactions = list(
+                get_block_transactions(self.hex, self.blockchain_type))
 
         return self._transactions
 
