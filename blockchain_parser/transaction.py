@@ -9,6 +9,8 @@
 # modified, propagated, or distributed except according to the terms contained
 # in the LICENSE file.
 
+from math import ceil
+
 from .utils import decode_varint, decode_uint32, double_sha256, format_hash
 from .input import Input
 from .output import Output
@@ -28,6 +30,7 @@ class Transaction(object):
         self.outputs = None
         self._version = None
         self._locktime = None
+        self._size = None
         self.n_inputs = 0
         self.n_outputs = 0
         self.is_segwit = False
@@ -72,10 +75,10 @@ class Transaction(object):
                     inp.add_witness(witness)
                     offset += component_length
 
-        self.size = offset + 4
-        self.hex = raw_hex[:self.size]
+        self._size = offset + 4
+        self.hex = raw_hex[:self._size]
 
-        if self.size != len(self.hex):
+        if self._size != len(self.hex):
             raise Exception("Incomplete transaction!")
 
     def __repr__(self):
@@ -123,6 +126,31 @@ class Transaction(object):
             self._hash = format_hash(double_sha256(self.hex))
 
         return self._hash
+
+    @property
+    def size(self):
+        """Returns the transactions size in bytes including the size of the
+        witness data if there is any."""
+        return self._size
+
+    @property
+    def vsize(self):
+        """Returns the transaction size in virtual bytes."""
+        if not self.is_segwit:
+            return self._size
+        else:
+            # the witness is the last element in a transaction before the
+            # 4 byte locktime and self._offset_before_tx_witnesses is the
+            # position where the witness starts
+            witness_size = self._size - self._offset_before_tx_witnesses - 4
+
+            # size of the transaction without the segwit marker (2 bytes) and
+            # the witness
+            stripped_size = self._size - (2 + witness_size)
+            weight = stripped_size * 3 + self._size
+
+            # vsize is weight / 4 rounded up
+            return ceil(weight / 4)
 
     @property
     def txid(self):
