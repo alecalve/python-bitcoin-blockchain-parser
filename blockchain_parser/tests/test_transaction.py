@@ -262,3 +262,12 @@ class TestTransaction(unittest.TestCase):
             "df2f9892bfa1cb086530354eab3ba078a2f0")
 
         self.assertRaises(Exception, Transaction, data)
+
+    def test_unknown_scripts(self):
+        with open(os.path.join(dir_path, "scripts_invalid.txt")) as f:
+            data = a2b_hex(f.read().strip())
+
+        tx = Transaction(data)
+
+        for output in tx.outputs:
+            self.assertEqual([], output.addresses)

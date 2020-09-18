@@ -95,6 +95,10 @@ class Output(object):
     @property
     def type(self):
         """Returns the output's script type as a string"""
+        # Fix for issue 11
+        if not self.script.script.is_valid():
+            return "invalid"
+
         if self.is_pubkeyhash():
             return "pubkeyhash"
 
