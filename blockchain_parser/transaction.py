@@ -104,22 +104,6 @@ class Transaction(object):
 
     @property
     def hash(self):
-        """Returns the transaction's hash"""
-        if self._hash is None:
-            # segwit transactions have two transaction ids/hashes, txid and wtxid
-            # txid is a hash of all of the legacy transaction fields only
-            if self.is_segwit:
-                txid = self.hex[:4] + self.hex[
-                                      6:self._offset_before_tx_witnesses] + self.hex[
-                                                                            -4:]
-            else:
-                txid = self.hex
-            self._hash = format_hash(double_sha256(txid))
-
-        return self._hash
-
-    @property
-    def hash(self):
         """Returns the transaction's id. Equivalent to the hash for non SegWit transactions,
         it differs from it for SegWit ones. """
         if self._hash is None:
