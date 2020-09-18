@@ -141,7 +141,7 @@ class Blockchain(object):
                     chain.append(block.hash)
 
                 # if we've found a chain length == num_dependencies (usually 6)
-                # we are ready to make a decesion on whether or not the block
+                # we are ready to make a decision on whether or not the block
                 # belongs to a fork or the main chain
                 if len(chain) == num_confirmations:
                     return first_block.hash in chain:
