@@ -98,6 +98,12 @@ class Script(object):
     def is_p2sh(self):
         return self.script.is_p2sh()
 
+    def is_p2wsh(self):
+        return self.script.is_witness_v0_scripthash()
+
+    def is_p2wpkh(self):
+        return self.script.is_witness_v0_keyhash()
+
     def is_pubkey(self):
         return len(self.operations) == 2 \
             and self.operations[-1] == OP_CHECKSIG \

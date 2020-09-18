@@ -10,17 +10,19 @@
 # in the LICENSE file.
 
 from bitcoin import base58
+from bitcoin.bech32 import CBech32Data
 from .utils import btc_ripemd160, double_sha256
 
 
 class Address(object):
     """Represents a bitcoin address"""
 
-    def __init__(self, hash, public_key, address, type):
+    def __init__(self, hash, public_key, address, type, segwit_version):
         self._hash = hash
         self.public_key = public_key
         self._address = address
         self.type = type
+        self._segwit_version = segwit_version
 
     def __repr__(self):
         return "Address(addr=%s)" % self.address
@@ -28,14 +30,19 @@ class Address(object):
     @classmethod
     def from_public_key(cls, public_key):
         """Constructs an Address object from a public key"""
-        return cls(None, public_key, None, "normal")
+        return cls(None, public_key, None, "normal", None)
 
     @classmethod
     def from_ripemd160(cls, hash, type="normal"):
         """Constructs an Address object from a RIPEMD-160 hash, it may be a
         normal address or a P2SH address, the latter is indicated by setting
         type to 'p2sh'"""
-        return cls(hash, None, None, type)
+        return cls(hash, None, None, type, None)
+
+    @classmethod
+    def from_bech32(cls, hash, segwit_version):
+        """Constructs an Address object from a bech32 hash."""
+        return cls(hash, None, None, "bech32", segwit_version)
 
     @property
     def hash(self):
@@ -47,12 +54,18 @@ class Address(object):
 
     @property
     def address(self):
-        """Returns the base58 encoded representation of this address"""
+        """Returns the encoded representation of this address.
+        If SegWit, it's encoded using bech32, otherwise using base58
+        """
         if self._address is None:
-            version = b'\x00' if self.type == "normal" else b'\x05'
-            checksum = double_sha256(version + self.hash)
+            if self.type != "bech32":
+                version = b'\x00' if self.type == "normal" else b'\x05'
+                checksum = double_sha256(version + self.hash)
 
-            self._address = base58.encode(version + self.hash + checksum[:4])
+                self._address = base58.encode(version + self.hash + checksum[:4])
+            else:
+                bech_encoded = CBech32Data.from_bytes(self._segwit_version, self._hash)
+                self._address = str(bech_encoded)
         return self._address
 
     def is_p2sh(self):

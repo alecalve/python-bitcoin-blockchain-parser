@@ -51,6 +51,24 @@ class TestTransaction(unittest.TestCase):
         tx = Transaction(data)
         self.assertTrue(tx.uses_bip69())
 
+    def test_bech32_p2wpkh(self):
+        example_tx = "bech32_p2wpkh.txt"
+        with open(os.path.join(dir_path, example_tx)) as f:
+            data = a2b_hex(f.read().strip())
+
+        tx = Transaction(data)
+        self.assertEqual(["3BBqfnaPbgi5KWECWdFpvryUfw7QatWy37"], [a.address for a in tx.outputs[0].addresses])
+        self.assertEqual(["bc1q4z0874xmfxe3xeqknulgnqhukhfjwh5tvjrr2x"], [a.address for a in tx.outputs[1].addresses])
+
+    def test_bech32_p2wsh(self):
+        example_tx = "bech32_p2wsh.txt"
+        with open(os.path.join(dir_path, example_tx)) as f:
+            data = a2b_hex(f.read().strip())
+
+        tx = Transaction(data)
+        self.assertEqual(["3GMKKFPNUg13VktgihUD8QfXVQRBdoDNDf"], [a.address for a in tx.outputs[0].addresses])
+        self.assertEqual(["bc1qday7wsftyv4r6qkpn8907s8fy3kexkny0xwrd8d4wlk06zffzyuqpp629n"], [a.address for a in tx.outputs[1].addresses])
+
     def test_segwit(self):
         example_tx = "segwit.txt"
         with open(os.path.join(dir_path, example_tx)) as f:
