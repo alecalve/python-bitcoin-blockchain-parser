@@ -71,6 +71,12 @@ class Output(object):
                 n = self.script.operations[-2]
                 for operation in self.script.operations[1:1+n]:
                     self._addresses.append(Address.from_public_key(operation))
+            elif self.type == "p2wpkh":
+                address = Address.from_bech32(self.script.operations[1], 0)
+                self._addresses.append(address)
+            elif self.type == "p2wsh":
+                address = Address.from_bech32(self.script.operations[1], 0)
+                self._addresses.append(address)
 
         return self._addresses
 
@@ -91,6 +97,12 @@ class Output(object):
 
     def is_unknown(self):
         return self.script.is_unknown()
+
+    def is_p2wpkh(self):
+        return self.script.is_p2wpkh()
+
+    def is_p2wsh(self):
+        return self.script.is_p2wsh()
 
     @property
     def type(self):
@@ -113,5 +125,11 @@ class Output(object):
 
         if self.is_return():
             return "OP_RETURN"
+
+        if self.is_p2wpkh():
+            return "p2wpkh"
+
+        if self.is_p2wsh():
+            return "p2wsh"
 
         return "unknown"

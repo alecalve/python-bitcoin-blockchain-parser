@@ -19,7 +19,7 @@ setup(
         'Topic :: Software Development :: Libraries',
     ],
     install_requires=[
-        'python-bitcoinlib==0.5.0',
-        'plyvel==1.0.4'
+        'python-bitcoinlib==0.11.0',
+        'plyvel==1.2.0'
     ]
 )
