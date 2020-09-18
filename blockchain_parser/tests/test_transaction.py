@@ -88,6 +88,25 @@ class TestTransaction(unittest.TestCase):
         self.assertEqual(parsed_2, wit_2)
         self.assertEqual(parsed_3, wit_3)
 
+    def test_vsize(self):
+        file_segwit_tx = "size_segwit.txt"
+        file_non_segwit_tx = "size_non_segwit.txt"
+
+        with open(os.path.join(dir_path, file_non_segwit_tx)) as f:
+            data = a2b_hex(f.read().strip())
+
+        tx = Transaction(data)
+        self.assertEqual(tx.vsize, tx.size)
+        self.assertEqual(tx.vsize, 189)
+
+        with open(os.path.join(dir_path, file_segwit_tx)) as f:
+            data = a2b_hex(f.read().strip())
+
+        tx = Transaction(data)
+        self.assertNotEqual(tx.vsize, tx.size)
+        self.assertEqual(tx.vsize, 208)
+        self.assertEqual(tx.size, 373)
+
     def test_large(self):
         data = a2b_hex(
             "010000000b04a4abee8360f7a660bcf1c298496d927b6ad1f25dd12485"
