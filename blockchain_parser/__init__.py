@@ -9,4 +9,4 @@
 # modified, propagated, or distributed except according to the terms contained
 # in the LICENSE file.
 
-__version__ = "0.1.4"
+__version__ = "0.1.5"
