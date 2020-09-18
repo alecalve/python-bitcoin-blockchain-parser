@@ -144,7 +144,7 @@ class Blockchain(object):
                 # we are ready to make a decision on whether or not the block
                 # belongs to a fork or the main chain
                 if len(chain) == num_confirmations:
-                    return first_block.hash in chain:
+                    return first_block.hash in chain
 
 
     def get_ordered_blocks(self, index, start=0, end=None, cache=None):
