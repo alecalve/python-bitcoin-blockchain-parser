@@ -10,26 +10,15 @@
 # in the LICENSE file.
 
 import unittest
-from binascii import a2b_hex
 from datetime import datetime
 
+from .utils import read_test_data
 from blockchain_parser.block import Block
 
 
 class TestBlock(unittest.TestCase):
     def test_from_hex(self):
-        block_str = "0100000000000000000000000000000000000000000000000000000" \
-                    "000000000000000003ba3edfd7a7b12b27ac72c3e67768f617fc81b" \
-                    "c3888a51323a9fb8aa4b1e5e4a29ab5f49ffff001d1dac2b7c01010" \
-                    "0000001000000000000000000000000000000000000000000000000" \
-                    "0000000000000000ffffffff4d04ffff001d0104455468652054696" \
-                    "d65732030332f4a616e2f32303039204368616e63656c6c6f72206f" \
-                    "6e206272696e6b206f66207365636f6e64206261696c6f757420666" \
-                    "f722062616e6b73ffffffff0100f2052a01000000434104678afdb0" \
-                    "fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb" \
-                    "649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c70" \
-                    "2b6bf11d5fac00000000"
-        block_hex = a2b_hex(block_str)
+        block_hex = read_test_data("genesis_block.txt")
         block = Block.from_hex(block_hex)
         self.assertEqual(1, block.n_transactions)
         block_hash = "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1" \
