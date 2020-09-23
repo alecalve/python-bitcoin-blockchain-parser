@@ -11,25 +11,115 @@
 
 import unittest
 from binascii import a2b_hex
-from blockchain_parser.script import Script, is_public_key
+from blockchain_parser.script import Script
 
 
 class TestScript(unittest.TestCase):
-    def test_from_hex(self):
+    def test_op_return_script(self):
         case1 = "6a"
         script = Script.from_hex(a2b_hex(case1))
         self.assertEqual("OP_RETURN", script.value)
+        self.assertFalse(script.is_pubkey())
+        self.assertFalse(script.is_multisig())
+        self.assertFalse(script.is_p2sh())
+        self.assertFalse(script.is_p2wpkh())
+        self.assertFalse(script.is_p2wsh())
+        self.assertFalse(script.is_pubkeyhash())
+        self.assertFalse(script.is_unknown())
+        self.assertTrue(script.is_return())
 
-    def test_invalid_script(self):
+    def test_unknown_script(self):
         case = "40"
         script = Script.from_hex(a2b_hex(case))
         self.assertEqual("INVALID_SCRIPT", script.value)
+        self.assertFalse(script.is_pubkey())
+        self.assertFalse(script.is_multisig())
+        self.assertFalse(script.is_p2sh())
+        self.assertFalse(script.is_p2wpkh())
+        self.assertFalse(script.is_p2wsh())
+        self.assertFalse(script.is_pubkeyhash())
+        self.assertTrue(script.is_unknown())
+        self.assertFalse(script.is_return())
 
-    def test_is_public_key(self):
-        case1 = "010000000000000017a91471c5c3727fac8dbace94bd38cf8ac16a034a7" \
-                "94787"
-        self.assertFalse(is_public_key(a2b_hex(case1)))
-        self.assertFalse(is_public_key(None))
-        case3 = "02c0993f639534d348e1dca30566491e6cb11c14afa13ec244c05396a98" \
-                "39aeb17"
-        self.assertTrue(is_public_key(a2b_hex(case3)))
+        case = ""
+        script = Script.from_hex(a2b_hex(case))
+        self.assertEqual("", script.value)
+        self.assertFalse(script.is_pubkey())
+        self.assertFalse(script.is_multisig())
+        self.assertFalse(script.is_p2sh())
+        self.assertFalse(script.is_p2wpkh())
+        self.assertFalse(script.is_p2wsh())
+        self.assertFalse(script.is_pubkeyhash())
+        self.assertTrue(script.is_unknown())
+        self.assertFalse(script.is_return())
+
+    def test_multisig_script(self):
+        case = "514104cc71eb30d653c0c3163990c47b976f3fb3f37cccdcbedb169a1dfef58bbfbfaff7d8a473e7e2e6d317b87bafe8bde97e3cf8f065dec022b51d11fcdd0d348ac4410461cbdcc5409fb4b4d42b51d33381354d80e550078cb532a34bfa2fcfdeb7d76519aecc62770f5b0e4ef8551946d8a540911abe3e7854a26f39f58b25c15342af52ae"
+        script = Script.from_hex(a2b_hex(case))
+        self.assertFalse(script.is_pubkey())
+        self.assertTrue(script.is_multisig())
+        self.assertFalse(script.is_p2sh())
+        self.assertFalse(script.is_p2wpkh())
+        self.assertFalse(script.is_p2wsh())
+        self.assertFalse(script.is_pubkeyhash())
+        self.assertFalse(script.is_unknown())
+        self.assertFalse(script.is_return())
+
+    def test_p2sh_script(self):
+        case = "a91428ad3e63dcae36e5010527578e2eef0e9eeaf3e487"
+        script = Script.from_hex(a2b_hex(case))
+        self.assertFalse(script.is_pubkey())
+        self.assertFalse(script.is_multisig())
+        self.assertTrue(script.is_p2sh())
+        self.assertFalse(script.is_p2wpkh())
+        self.assertFalse(script.is_p2wsh())
+        self.assertFalse(script.is_pubkeyhash())
+        self.assertFalse(script.is_unknown())
+        self.assertFalse(script.is_return())
+
+    def test_p2wpkh_script(self):
+        case = "0014c958269b5b6469b6e4b87de1062028ad3bb83cc2"
+        script = Script.from_hex(a2b_hex(case))
+        self.assertFalse(script.is_pubkey())
+        self.assertFalse(script.is_multisig())
+        self.assertFalse(script.is_p2sh())
+        self.assertTrue(script.is_p2wpkh())
+        self.assertFalse(script.is_p2wsh())
+        self.assertFalse(script.is_pubkeyhash())
+        self.assertFalse(script.is_unknown())
+        self.assertFalse(script.is_return())
+
+    def test_p2wsh_script(self):
+        case = "0020701a8d401c84fb13e6baf169d59684e17abd9fa216c8cc5b9fc63d622ff8c58d"
+        script = Script.from_hex(a2b_hex(case))
+        self.assertFalse(script.is_p2sh())
+        self.assertFalse(script.is_multisig())
+        self.assertFalse(script.is_p2sh())
+        self.assertFalse(script.is_p2wpkh())
+        self.assertTrue(script.is_p2wsh())
+        self.assertFalse(script.is_pubkeyhash())
+        self.assertFalse(script.is_unknown())
+        self.assertFalse(script.is_return())
+
+    def test_pubkeyhash_script(self):
+        case = "76a914e9629ef6f5b82564a9b2ecae6c288c56fb33710888ac"
+        script = Script.from_hex(a2b_hex(case))
+        self.assertFalse(script.is_pubkey())
+        self.assertFalse(script.is_multisig())
+        self.assertFalse(script.is_p2sh())
+        self.assertFalse(script.is_p2wpkh())
+        self.assertFalse(script.is_p2wsh())
+        self.assertTrue(script.is_pubkeyhash())
+        self.assertFalse(script.is_unknown())
+        self.assertFalse(script.is_return())
+
+    def test_pubkey_script(self):
+        script = Script.from_hex(a2b_hex("4104678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5fac"))
+        self.assertTrue(script.is_pubkey())
+        self.assertFalse(script.is_multisig())
+        self.assertFalse(script.is_p2sh())
+        self.assertFalse(script.is_p2wpkh())
+        self.assertFalse(script.is_p2wsh())
+        self.assertFalse(script.is_pubkeyhash())
+        self.assertFalse(script.is_unknown())
+        self.assertFalse(script.is_return())

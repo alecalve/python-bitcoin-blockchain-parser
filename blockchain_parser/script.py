@@ -70,7 +70,10 @@ class Script(object):
         """
         if self._operations is None:
             # Some coinbase scripts are garbage, they could not be valid
-            self._operations = list(self.script)
+            try:
+                self._operations = list(self.script)
+            except CScriptInvalidError:
+                self._operations = []
 
         return self._operations
 
@@ -80,7 +83,7 @@ class Script(object):
         if self._value is None:
             parts = []
             try:
-                for operation in self.operations:
+                for operation in list(self.script):
                     if isinstance(operation, bytes):
                         parts.append(b2a_hex(operation).decode("ascii"))
                     else:
@@ -138,4 +141,5 @@ class Script(object):
     def is_unknown(self):
         return not self.is_pubkeyhash() and not self.is_pubkey() \
             and not self.is_p2sh() and not self.is_multisig() \
-            and not self.is_return()
+            and not self.is_return() and not self.is_p2wpkh() \
+            and not self.is_p2wsh()
