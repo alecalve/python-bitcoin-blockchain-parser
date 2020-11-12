@@ -35,7 +35,8 @@ class TestDBIndex(unittest.TestCase):
 
 class TestDBTransactionIndex(unittest.TestCase):
     def test_from_hex(self):
-        key_str = "70ad7da56decc86b8a58ac53dbde792c9e97552cdaafd37312af7c4d5c7d0cc1"
+        key_str = "70ad7da56decc86b8a58ac53dbde792c9e97552cdaafd37312af7c4" \
+                  "d5c7d0cc1"
         value_str = "9071938b980ba4bf39"
 
         value_hex = a2b_hex(value_str)

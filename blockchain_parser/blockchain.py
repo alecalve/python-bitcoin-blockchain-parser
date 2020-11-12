@@ -231,7 +231,7 @@ class Blockchain(object):
         byte_arr = bytearray.fromhex(txid)
         byte_arr.reverse()
         tx_hash = hexlify(b't').decode('utf-8') + \
-                  hexlify(byte_arr).decode('utf-8')
+            hexlify(byte_arr).decode('utf-8')
 
         tx_hash_fmtd = unhexlify(tx_hash)
         raw_hex = db.get(tx_hash_fmtd)

@@ -75,5 +75,7 @@ class DBTransactionIndex(object):
         self.block_offset, i = _read_varint(raw_hex[pos:])
 
     def __repr__(self):
-        return "DBTransactionIndex(%s, blockfile_no=%d, file_offset=%d, block_offset=%d)" \
-               % (self.hash, self.blockfile_no, self.file_offset, self.block_offset)
+        return "DBTransactionIndex(%s, blockfile_no=%d, " \
+               "file_offset=%d, block_offset=%d)" \
+               % (self.hash, self.blockfile_no,
+                  self.file_offset, self.block_offset)
