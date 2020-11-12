@@ -250,7 +250,7 @@ class Blockchain(object):
                 transaction = Transaction.from_hex(
                     transaction_data[offset:offset_e])
                 return transaction
-            except:
+            except Exception:
                 continue
 
         return None
