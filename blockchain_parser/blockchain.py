@@ -223,13 +223,15 @@ class Blockchain(object):
             yield Block(get_block(blkFile, blkIdx.data_pos), blkIdx.height)
 
     def get_transaction(self, txid, db):
-        """Yields the transaction contained in the .blk files as a python object,
-        similar to https://developer.bitcoin.org/reference/rpc/getrawtransaction.html
+        """Yields the transaction contained in the .blk files as a python
+         object, similar to
+         https://developer.bitcoin.org/reference/rpc/getrawtransaction.html
         """
 
         byte_arr = bytearray.fromhex(txid)
         byte_arr.reverse()
-        tx_hash = hexlify(b't').decode('utf-8') + hexlify(byte_arr).decode('utf-8')
+        tx_hash = hexlify(b't').decode('utf-8') + \
+                  hexlify(byte_arr).decode('utf-8')
 
         tx_hash_fmtd = unhexlify(tx_hash)
         raw_hex = db.get(tx_hash_fmtd)
