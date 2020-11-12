@@ -16,6 +16,11 @@ import pickle
 import stat
 import plyvel
 
+from blockchain_parser.transaction import Transaction
+from blockchain_parser.index import DBTransactionIndex
+from blockchain_parser import utils
+from binascii import unhexlify
+from binascii import hexlify
 from .block import Block
 from .index import DBBlockIndex
 from .utils import format_hash
@@ -146,7 +151,6 @@ class Blockchain(object):
                 if len(chain) == num_confirmations:
                     return first_block.hash in chain
 
-
     def get_ordered_blocks(self, index, start=0, end=None, cache=None):
         """Yields the blocks contained in the .blk files as per
         the heigt extract from the leveldb index present at path
@@ -168,8 +172,8 @@ class Blockchain(object):
                 with open(cache, 'wb') as f:
                     pickle.dump(blockIndexes, f)
 
-        # remove small forks that may have occured while the node was live.
-        # Occassionally a node will receive two different solutions to a block
+        # remove small forks that may have occurred while the node was live.
+        # Occasionally a node will receive two different solutions to a block
         # at the same time. The Leveldb index saves both, not pruning the
         # block that leads to a shorter chain once the fork is settled without
         # "-reindex"ing the bitcoind block data. This leads to at least two
@@ -217,3 +221,34 @@ class Blockchain(object):
                 break
             blkFile = os.path.join(self.path, "blk%05d.dat" % blkIdx.file)
             yield Block(get_block(blkFile, blkIdx.data_pos), blkIdx.height)
+
+    def get_transaction(self, txid, db):
+        """Yields the transaction contained in the .blk files as a python object,
+        similar to https://developer.bitcoin.org/reference/rpc/getrawtransaction.html
+        """
+
+        byte_arr = bytearray.fromhex(txid)
+        byte_arr.reverse()
+        tx_hash = hexlify(b't').decode('utf-8') + hexlify(byte_arr).decode('utf-8')
+
+        tx_hash_fmtd = unhexlify(tx_hash)
+        raw_hex = db.get(tx_hash_fmtd)
+
+        tx_idx = DBTransactionIndex(utils.format_hash(tx_hash_fmtd), raw_hex)
+        blk_file = os.path.join(self.path, "blk%05d.dat" % tx_idx.blockfile_no)
+        raw_hex = get_block(blk_file, tx_idx.file_offset)
+
+        offset = tx_idx.block_offset
+
+        transaction_data = raw_hex[80:]
+        # Try from 1024 (1KiB) -> 1073741824 (1GiB) slice widths
+        for j in range(0, 20):
+            try:
+                offset_e = offset + (1024 * 2 ** j)
+                transaction = Transaction.from_hex(
+                    transaction_data[offset:offset_e])
+                return transaction
+            except:
+                continue
+
+        return None

@@ -38,7 +38,7 @@ class Output(object):
 
     @property
     def value(self):
-        """Returns the value of the output exprimed in satoshis"""
+        """Returns the value of the output expressed in satoshis"""
         if self._value is None:
             self._value = decode_uint64(self._value_hex)
         return self._value
@@ -52,7 +52,7 @@ class Output(object):
 
     @property
     def addresses(self):
-        """Returns a list containinng all the addresses mentionned
+        """Returns a list containing all the addresses mentioned
         in the output's script
         """
         if self._addresses is None:
