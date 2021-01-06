@@ -51,7 +51,7 @@ class DBBlockIndex(object):
             self.undo_pos, i = _read_varint(raw_hex[pos:])
             pos += i
 
-        assert(pos + 80 == len(raw_hex))
+        assert (pos + 80 == len(raw_hex))
         self.version, p, m, time, bits, self.nonce = unpack(
             "<I32s32sIII",
             raw_hex[-80:]
@@ -62,3 +62,20 @@ class DBBlockIndex(object):
     def __repr__(self):
         return "DBBlockIndex(%s, height=%d, file_no=%d, file_pos=%d)" \
                % (self.hash, self.height, self.file, self.data_pos)
+
+
+class DBTransactionIndex(object):
+    def __init__(self, txn_hash, raw_hex):
+        self.hash = txn_hash
+        pos = 0
+        self.blockfile_no, i = _read_varint(raw_hex[pos:])
+        pos += i
+        self.file_offset, i = _read_varint(raw_hex[pos:])
+        pos += i
+        self.block_offset, i = _read_varint(raw_hex[pos:])
+
+    def __repr__(self):
+        return "DBTransactionIndex(%s, blockfile_no=%d, " \
+               "file_offset=%d, block_offset=%d)" \
+               % (self.hash, self.blockfile_no,
+                  self.file_offset, self.block_offset)

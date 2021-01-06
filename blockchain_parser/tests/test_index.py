@@ -2,6 +2,7 @@ import unittest
 from binascii import a2b_hex
 
 from blockchain_parser.index import DBBlockIndex
+from blockchain_parser.index import DBTransactionIndex
 
 
 class TestDBIndex(unittest.TestCase):
@@ -30,3 +31,18 @@ class TestDBIndex(unittest.TestCase):
                                         "b593a8e50c3805ffae1319275fb")
         self.assertEqual(idx.merkle_root, "e34721a2587695e74caf820006d2e8c1f5f"
                                           "54350b49d97e74b26f87ac66b1cc1")
+
+
+class TestDBTransactionIndex(unittest.TestCase):
+    def test_from_hex(self):
+        key_str = "70ad7da56decc86b8a58ac53dbde792c9e97552cdaafd37312af7c4" \
+                  "d5c7d0cc1"
+        value_str = "9071938b980ba4bf39"
+
+        value_hex = a2b_hex(value_str)
+        idx = DBTransactionIndex(key_str, value_hex)
+
+        self.assertEqual(idx.hash, key_str)
+        self.assertEqual(idx.blockfile_no, 2289)
+        self.assertEqual(idx.block_offset, 614457)
+        self.assertEqual(idx.file_offset, 42142859)
