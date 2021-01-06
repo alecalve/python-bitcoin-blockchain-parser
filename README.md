@@ -8,6 +8,51 @@ This Python 3 library provides a parser for the raw data stored by bitcoind.
 - Supports SegWit
 - Supports ordered block parsing
 
+## Installing
+
+### Using pip
+
+```
+pip install blockchain-parser
+```
+
+### Using source
+
+Requirements : python-bitcoinlib, plyvel, coverage for tests
+
+plyvel requires leveldb development libraries for LevelDB >1.2.X
+
+On Linux, install libleveldb-dev
+
+```
+sudo apt-get install libleveldb-dev
+```
+
+Install dependencies contained in `requirements.txt`:
+```
+pip install -r requirements.txt
+```
+
+Then, just run
+```
+python setup.py install
+```
+
+## Developing
+
+First, setup a virtualenv and install dependencies:
+
+```
+virtualenv -p python3 .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+Run the test suite by lauching
+```
+./tests.sh
+```
+
 ## Examples
 
 Below are two basic examples for parsing the blockchain. More examples are available in the examples directory.
@@ -60,51 +105,4 @@ for block in blockchain.get_ordered_blocks(os.path.expanduser('~/.bitcoin/blocks
 ```
 
 **NOTE**: You must manually/programmatically delete the cache file in order to rebuild the cache. Don't forget to do this each time you would like to re-parse the blockchain with a higher block height than the first time you saved the cache file as the new blocks will not be included in the cache.
-
-## Installing
-
-### Using pip
-
-```
-pip install blockchain-parser
-```
-
-### Using source
-
-Requirements : python-bitcoinlib, plyvel, coverage for tests
-
-plyvel requires leveldb development libraries for LevelDB >1.2.X
-
-On Linux, install libleveldb-dev
-
-```
-sudo apt-get install libleveldb-dev
-```
-
-Install dependencies contained in `requirements.txt`:
-```
-pip install -r requirements.txt
-```
-
-Then, just run
-```
-python setup.py install
-```
-
-## Developing
-
-First, setup a virtualenv and install dependencies:
-
-```
-virtualenv -p python3 .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-Run the test suite by lauching
-```
-./tests.sh
-```
-
-
 
