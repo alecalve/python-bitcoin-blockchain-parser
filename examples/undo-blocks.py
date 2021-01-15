@@ -1,9 +1,8 @@
 import os
-import plyvel
 from blockchain_parser.blockchain import *
-from blockchain_parser.output import *
-from blockchain_parser.utils import *
 from blockchain_parser.blockchain import Blockchain
+from blockchain_parser.utils import *
+from blockchain_parser.undo import *
 
 undo_files = get_undo_files(os.path.expanduser('~/.bitcoin/blocks'))
 undo_block_ctr = 0
