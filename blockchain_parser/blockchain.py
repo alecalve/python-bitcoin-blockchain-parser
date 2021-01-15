@@ -106,7 +106,7 @@ class Blockchain(object):
         """
         for blk_file in get_files(self.path):
             for raw_block in get_blocks(blk_file):
-                yield Block(raw_block)
+                yield Block(raw_block, None, os.path.split(blk_file)[1])
 
     def __getBlockIndexes(self, index):
         """There is no method of leveldb to close the db (and release the lock).

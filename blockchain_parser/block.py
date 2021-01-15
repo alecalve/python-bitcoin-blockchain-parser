@@ -46,7 +46,7 @@ class Block(object):
     Represents a Bitcoin block, contains its header and its transactions.
     """
 
-    def __init__(self, raw_hex, height=None):
+    def __init__(self, raw_hex, height=None, blk_file=None):
         self.hex = raw_hex
         self._hash = None
         self._transactions = None
@@ -54,6 +54,7 @@ class Block(object):
         self._n_transactions = None
         self.size = len(raw_hex)
         self.height = height
+        self.blk_file = blk_file
 
     def __repr__(self):
         return "Block(%s)" % self.hash
