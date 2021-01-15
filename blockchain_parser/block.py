@@ -11,7 +11,7 @@
 
 from .transaction import Transaction
 from .block_header import BlockHeader
-from .utils import format_hash, decode_varint, double_sha256
+from .utils import format_hash, decode_compactsize, double_sha256
 
 
 def get_block_transactions(raw_hex):
@@ -23,7 +23,7 @@ def get_block_transactions(raw_hex):
 
     # Decoding the number of transactions, offset is the size of
     # the varint (1 to 9 bytes)
-    n_transactions, offset = decode_varint(transaction_data)
+    n_transactions, offset = decode_compactsize(transaction_data)
 
     for i in range(n_transactions):
         # Try from 1024 (1KiB) -> 1073741824 (1GiB) slice widths
@@ -77,7 +77,7 @@ class Block(object):
         as there's no need to parse all transactions to get this information
         """
         if self._n_transactions is None:
-            self._n_transactions = decode_varint(self.hex[80:])[0]
+            self._n_transactions = decode_compactsize(self.hex[80:])[0]
 
         return self._n_transactions
 
