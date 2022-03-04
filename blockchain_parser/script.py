@@ -107,7 +107,7 @@ class Script(object):
 
     def is_p2wpkh(self):
         return self.script.is_witness_v0_keyhash()
-    
+
     def is_p2tr(self):
         return self.operations[0] == 1 \
             and from_taproot(b2a_hex(self.operations[1]).decode("ascii")).startswith("bc1p")

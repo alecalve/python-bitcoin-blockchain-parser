@@ -46,7 +46,7 @@ class Address(object):
     def from_bech32(cls, hash, segwit_version):
         """Constructs an Address object from a bech32 hash."""
         return cls(hash, None, None, "bech32", segwit_version)
-    
+
     @classmethod
     def from_bech32m(cls, hash, segwit_version):
         """Constructs an Address object from a bech32m script."""
@@ -63,7 +63,7 @@ class Address(object):
     def address(self):
         """Returns the encoded representation of this address.
         If Taproot, it's encoded using bech32m,
-        if SegWit, it's encoded using bech32, 
+        if SegWit, it's encoded using bech32,
         otherwise using base58
         """
         if self._address is None:

@@ -9,18 +9,22 @@
 # modified, propagated, or distributed except according to the terms contained
 # in the LICENSE file.
 #
-# Encoding/Decoding written by Pieter Wuille (2017) and adapted by Anton Wahrstätter (2022)
+# Encoding/Decoding written by Pieter Wuille (2017) 
+# and adapted by Anton Wahrstätter (2022)
 # https://github.com/Bytom/python-bytomlib/blob/master/pybtmsdk/segwit_addr.py
 
 
 from enum import Enum
 
+
 class Encoding(Enum):
     """Enumeration type to list the various supported encodings."""
     BECH32M = 2
 
+
 CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
 BECH32M_CONST = 0x2bc830a3
+
 
 def bech32_polymod(values):
     """Internal function that computes the Bech32 checksum."""
@@ -104,6 +108,7 @@ def convertbits(data, frombits, tobits, pad=True):
         return None
     return ret
 
+
 def decode(hrp, addr):
     """Decode a segwit address."""
     hrpgot, data, spec = bech32_decode(addr)
@@ -120,6 +125,7 @@ def decode(hrp, addr):
         return (None, None)
     return (data[0], decoded)
 
+
 def encode(witprog):
     hrp, witver = "bc", 1
     """Encode a segwit address."""
@@ -128,6 +134,7 @@ def encode(witprog):
     if decode(hrp, ret) == (None, None):
         return None
     return ret
+
 
 def from_taproot(script):
     script = [int(script[i:i+2], 16) for i in range(0, len(script), 2)]

@@ -105,7 +105,7 @@ class Output(object):
 
     def is_p2wsh(self):
         return self.script.is_p2wsh()
-    
+
     def is_p2tr(self):
         return self.script.is_p2tr()
 
@@ -136,7 +136,7 @@ class Output(object):
 
         if self.is_p2wsh():
             return "p2wsh"
-        
+   
         if self.is_p2tr():
             return "p2tr"
 
