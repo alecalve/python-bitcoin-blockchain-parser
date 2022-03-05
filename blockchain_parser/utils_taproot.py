@@ -121,7 +121,8 @@ def decode(hrp, addr):
         return (None, None)
     if data[0] == 0 and len(decoded) != 20 and len(decoded) != 32:
         return (None, None)
-    if data[0] == 0 and spec != Encoding.BECH32 or data[0] != 0 and spec != Encoding.BECH32M:
+    if data[0] == 0 and spec != Encoding.BECH32 \
+        or data[0] != 0 and spec != Encoding.BECH32M:
         return (None, None)
     return (data[0], decoded)
 
@@ -136,6 +137,7 @@ def encode(witprog):
     return ret
 
 
-def from_taproot(tweaked_pubkey):
-    tweaked_pubkey = [int(tweaked_pubkey[i:i+2], 16) for i in range(0, len(tweaked_pubkey), 2)]
-    return encode(tweaked_pubkey)
+def from_taproot(tpk):
+    """Input Tweaked Public Key."""
+    tpk = [int(tpk[i:i+2], 16) for i in range(0, len(tpk), 2)]
+    return encode(tpk)

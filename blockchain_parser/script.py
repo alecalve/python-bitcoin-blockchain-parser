@@ -150,3 +150,4 @@ class Script(object):
             and not self.is_p2sh() and not self.is_multisig() \
             and not self.is_return() and not self.is_p2wpkh() \
             and not self.is_p2wsh() and not self.is_p2tr()
+    
