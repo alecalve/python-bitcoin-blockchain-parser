@@ -12,6 +12,8 @@
 from bitcoin import base58
 from bitcoin.bech32 import CBech32Data
 from .utils import btc_ripemd160, double_sha256
+from .utils_taproot import from_taproot
+from binascii import b2a_hex
 
 
 class Address(object):
@@ -44,21 +46,30 @@ class Address(object):
         """Constructs an Address object from a bech32 hash."""
         return cls(hash, None, None, "bech32", segwit_version)
 
+    @classmethod
+    def from_bech32m(cls, hash, segwit_version):
+        """Constructs an Address object from a bech32m script."""
+        return cls(hash, None, None, "bech32m", segwit_version)
+
     @property
     def hash(self):
         """Returns the RIPEMD-160 hash corresponding to this address"""
         if self.public_key is not None and self._hash is None:
             self._hash = btc_ripemd160(self.public_key)
-
         return self._hash
 
     @property
     def address(self):
         """Returns the encoded representation of this address.
-        If SegWit, it's encoded using bech32, otherwise using base58
+        If Taproot, it's encoded using bech32m,
+        if SegWit, it's encoded using bech32,
+        otherwise using base58
         """
         if self._address is None:
-            if self.type != "bech32":
+            if self.type == "bech32m":
+                tweaked_pubkey = b2a_hex(self.hash).decode("ascii")
+                self._address = from_taproot(tweaked_pubkey)
+            elif self.type != "bech32":
                 version = b'\x00' if self.type == "normal" else b'\x05'
                 checksum = double_sha256(version + self.hash)
 
