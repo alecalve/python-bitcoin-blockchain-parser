@@ -136,7 +136,7 @@ class Output(object):
 
         if self.is_p2wsh():
             return "p2wsh"
-   
+
         if self.is_p2tr():
             return "p2tr"
 

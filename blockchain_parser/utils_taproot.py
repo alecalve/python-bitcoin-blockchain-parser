@@ -9,7 +9,7 @@
 # modified, propagated, or distributed except according to the terms contained
 # in the LICENSE file.
 #
-# Encoding/Decoding written by Pieter Wuille (2017) 
+# Encoding/Decoding written by Pieter Wuille (2017)
 # and adapted by Anton Wahrstätter (2022)
 # https://github.com/Bytom/python-bytomlib/blob/master/pybtmsdk/segwit_addr.py
 
@@ -121,7 +121,7 @@ def decode(hrp, addr):
         return (None, None)
     if data[0] == 0 and len(decoded) != 20 and len(decoded) != 32:
         return (None, None)
-    if data[0] == 0 and spec != Encoding.BECH32 or data[0] != 0 and spec != Encoding.BECH32M:
+    if data[0] != 0 and spec != Encoding.BECH32M:
         return (None, None)
     return (data[0], decoded)
 
@@ -137,5 +137,5 @@ def encode(witprog):
 
 
 def from_taproot(tweaked_pubkey):
-    tweaked_pubkey = [int(tweaked_pubkey[i:i+2], 16) for i in range(0, len(tweaked_pubkey), 2)]
+    tweaked_pubkey = [int(tweaked_pubkey[i:i+2], 16) for i in range(len(tweaked_pubkey), 2)]
     return encode(tweaked_pubkey)

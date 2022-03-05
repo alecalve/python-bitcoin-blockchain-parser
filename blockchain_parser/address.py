@@ -67,7 +67,8 @@ class Address(object):
         """
         if self._address is None:
             if self.type == "bech32m":
-                self._address = from_taproot(b2a_hex(self.hash).decode("ascii"))
+            	tweaked_pubkey = b2a_hex(self.hash).decode("ascii")
+                self._address = from_taproot(tweaked_pubkey)
             elif self.type != "bech32":
                 version = b'\x00' if self.type == "normal" else b'\x05'
                 checksum = double_sha256(version + self.hash)
