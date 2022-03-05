@@ -77,7 +77,9 @@ class Output(object):
             elif self.type == "p2wsh":
                 address = Address.from_bech32(self.script.operations[1], 0)
                 self._addresses.append(address)
-
+            elif self.type == "p2tr":
+                address = Address.from_bech32m(self.script.operations[1], 1)
+                self._addresses.append(address)
         return self._addresses
 
     def is_return(self):
@@ -103,6 +105,9 @@ class Output(object):
 
     def is_p2wsh(self):
         return self.script.is_p2wsh()
+
+    def is_p2tr(self):
+        return self.script.is_p2tr()
 
     @property
     def type(self):
@@ -131,5 +136,8 @@ class Output(object):
 
         if self.is_p2wsh():
             return "p2wsh"
+
+        if self.is_p2tr():
+            return "p2tr"
 
         return "unknown"
