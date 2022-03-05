@@ -21,7 +21,7 @@ class Encoding(Enum):
     BECH32 = 1
     BECH32M = 2
 
-    
+
 CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
 BECH32M_CONST = 0x2bc830a3
 
@@ -123,7 +123,7 @@ def decode(hrp, addr):
         return (None, None)
     if data[0] == 0 and spec != Encoding.BECH32 \
         or data[0] != 0 and spec != Encoding.BECH32M:
-        return (None, None)
+            return (None, None)
     return (data[0], decoded)
 
 
