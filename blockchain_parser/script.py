@@ -109,10 +109,11 @@ class Script(object):
         return self.script.is_witness_v0_keyhash()
 
     def is_p2tr(self):
-        taproot = from_taproot(b2a_hex(self.operations[1]).decode("ascii"))
-        return self.operations[0] == 1 \
-            and isinstance(taproot, str) \
-            and taproot.startswith("bc1p")
+        if type(self.operations[1]) == bytes:
+            taproot = from_taproot(b2a_hex(self.operations[1]).decode("ascii"))
+            return self.operations[0] == 1 \
+                and isinstance(taproot, str) \
+                and taproot.startswith("bc1p")
 
     def is_pubkey(self):
         return len(self.operations) == 2 \
