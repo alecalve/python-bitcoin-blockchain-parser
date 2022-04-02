@@ -109,7 +109,7 @@ class Script(object):
         return self.script.is_witness_v0_keyhash()
 
     def is_p2tr(self):
-        if type(self.operations[1]) == bytes:
+        if len(self.operations) > 1 and type(self.operations[1]) == bytes:
             taproot = from_taproot(b2a_hex(self.operations[1]).decode("ascii"))
             return self.operations[0] == 1 \
                 and isinstance(taproot, str) \
