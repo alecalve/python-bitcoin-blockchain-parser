@@ -9,7 +9,6 @@
 # modified, propagated, or distributed except according to the terms contained
 # in the LICENSE file.
 
-from binascii import hexlify
 import hashlib
 import struct
 
@@ -26,7 +25,7 @@ def double_sha256(data):
 
 
 def format_hash(hash_):
-    return str(hexlify(hash_[::-1]).decode("utf-8"))
+    return hash_[::-1].hex()
 
 
 def decode_uint32(data):
