@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 The bitcoin-blockchain-parser developers
+# Copyright (C) 2015-2020 The bitcoin-blockchain-parser developers
 #
 # This file is part of bitcoin-blockchain-parser.
 #
@@ -10,6 +10,50 @@
 # in the LICENSE file.
 
 from .utils import decode_varint, decode_compactsize, decompress_txout_amt
+
+def decompress_script(raw_hex):
+    script_type = raw_hex[0]
+    compressed_script = raw_hex[1:]
+
+    # def decompress_script(compressed_script, script_type):
+    """ Takes CScript as stored in leveldb and returns it in uncompressed form
+    (de)compression scheme is defined in bitcoin/src/compressor.cpp
+    :param compressed_script: raw script bytes hexlified (data in decode_utxo)
+    :type compressed_script: str
+    :param script_type: first byte of script data (out_type in decode_utxo)
+    :type script_type: int
+    :return: the decompressed CScript
+    :rtype: str
+    (this code adapted from https://github.com/sr-gi/bitcoin_tools)
+    """
+
+    if script_type == 0:
+        if len(compressed_script) != 20:
+            raise Exception("Compressed script has wrong size")
+        script = OutputScript.P2PKH(compressed_script, hash160=True)
+
+    elif script_type == 1:
+        if len(compressed_script) != 20:
+            raise Exception("Compressed script has wrong size")
+        script = OutputScript.P2SH(compressed_script)
+
+    elif script_type in [2, 3]:
+        if len(compressed_script) != 33:
+            raise Exception("Compressed script has wrong size")
+        script = OutputScript.P2PK(compressed_script)
+
+    elif script_type in [4, 5]:
+        if len(compressed_script) != 33:
+            raise Exception("Compressed script has wrong size")
+        prefix = format(script_type - 2, '02')
+        script = OutputScript.P2PK(get_uncompressed_pk(prefix + compressed_script[2:]))
+
+    else:
+        assert len(compressed_script) / 2 == script_type - NSPECIALSCRIPTS
+        script = OutputScript.from_hex(compressed_script)
+
+    return script.content
+
 
 class BlockUndo(object):
     """
@@ -80,13 +124,21 @@ class SpentOutput(object):
         pos += compressed_amt_len
 
         # get script
-        script_hex, script_pub_key_len = SpentScriptPubKey.extract_from_hex(raw_hex[pos:])
-        self.script_pub_key = SpentScriptPubKey(script_hex)
-        self.len = pos + self.script_pub_key.len
+        script_hex, script_pub_key_compressed_len = SpentScriptPubKey.extract_from_hex(raw_hex[pos:])
+        self.script_pub_key_compressed = SpentScriptPubKey(script_hex)
+        self.len = pos + self.script_pub_key_compressed.len
 
     @classmethod
     def from_hex(cls, hex_):
         return cls(hex_)
+
+    
+    @property
+    def script(self):
+        if not self.script:
+            self.script = decompress_script(self.script_pub_key_compressed)
+        return self.script
+
 
 
 class SpentScriptPubKey(object):
@@ -120,3 +172,9 @@ class SpentScriptPubKey(object):
             real_script_len = script_len_code - 6
             # print("real_script_len: %d" % real_script_len)
             return (raw_hex[:script_len_code_len+real_script_len], real_script_len)
+
+    @property
+    def script(self):
+        if not self.script:
+            self.script = decompress_script(self._raw_hex)
+        return self.script

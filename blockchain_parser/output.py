@@ -9,7 +9,7 @@
 # modified, propagated, or distributed except according to the terms contained
 # in the LICENSE file.
 
-from .utils import decode_compactsize, decode_uint64, decode_varint, decompress_txout_amt
+from .utils import decode_compactsize, decode_uint64
 from .script import Script
 from .address import Address
 
