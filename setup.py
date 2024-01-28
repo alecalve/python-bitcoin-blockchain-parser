@@ -20,6 +20,6 @@ setup(
     ],
     install_requires=[
         'python-bitcoinlib==0.11.0',
-        'plyvel==1.2.0'
+        'plyvel==1.5.1'
     ]
 )
