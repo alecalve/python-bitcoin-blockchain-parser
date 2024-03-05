@@ -24,6 +24,7 @@ from binascii import hexlify
 from .block import Block
 from .index import DBBlockIndex
 from .utils import format_hash
+from .block_header import BlockHeader
 
 
 # Constant separating blocks in the .blk files
@@ -243,13 +244,15 @@ class Blockchain(object):
         offset = tx_idx.block_offset
 
         transaction_data = raw_hex[80:]
+        block_header_data = raw_hex[:80]
         # Try from 1024 (1KiB) -> 1073741824 (1GiB) slice widths
         for j in range(0, 20):
             try:
+                block_header = BlockHeader.from_hex(block_header_data)
                 offset_e = offset + (1024 * 2 ** j)
                 transaction = Transaction.from_hex(
                     transaction_data[offset:offset_e])
-                return transaction
+                return [block_header, transaction]
             except Exception:
                 continue
 
