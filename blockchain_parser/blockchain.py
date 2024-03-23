@@ -43,10 +43,22 @@ def get_files(path):
     files = map(lambda x: os.path.join(path, x), files)
     return sorted(files)
 
+def get_undo_files(path):
+    """
+    Given the path to the .bitcoin directory, returns the sorted list of rev*.dat
+    files contained in that directory
+    """
+    if not stat.S_ISDIR(os.stat(path)[stat.ST_MODE]):
+        return [path]
+    files = os.listdir(path)
+    files = [f for f in files if f.startswith("rev") and f.endswith(".dat")]
+    files = map(lambda x: os.path.join(path, x), files)
+    return sorted(files)
+
 
 def get_blocks(blockfile):
     """
-    Given the name of a .blk file, for every block contained in the file,
+    Given the name of a .dat file, for every block contained in the file,
     yields its raw hexadecimal value
     """
     with open(blockfile, "rb") as f:

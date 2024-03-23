@@ -9,7 +9,7 @@
 # modified, propagated, or distributed except according to the terms contained
 # in the LICENSE file.
 
-from .utils import decode_varint, decode_uint32, format_hash
+from .utils import decode_compactsize, decode_uint32, format_hash
 from .script import Script
 
 
@@ -23,7 +23,7 @@ class Input(object):
         self._sequence_number = None
         self._witnesses = []
 
-        self._script_length, varint_length = decode_varint(raw_hex[36:])
+        self._script_length, varint_length = decode_compactsize(raw_hex[36:])
         self._script_start = 36 + varint_length
 
         self.size = self._script_start + self._script_length + 4

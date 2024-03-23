@@ -11,7 +11,7 @@
 
 from math import ceil
 
-from .utils import decode_varint, decode_uint32, double_sha256, format_hash
+from .utils import decode_compactsize, decode_uint32, double_sha256, format_hash
 from .input import Input
 from .output import Output
 
@@ -44,7 +44,7 @@ class Transaction(object):
             self.is_segwit = True
             offset += 2
 
-        self.n_inputs, varint_size = decode_varint(raw_hex[offset:])
+        self.n_inputs, varint_size = decode_compactsize(raw_hex[offset:])
         offset += varint_size
 
         self.inputs = []
@@ -53,7 +53,7 @@ class Transaction(object):
             offset += input.size
             self.inputs.append(input)
 
-        self.n_outputs, varint_size = decode_varint(raw_hex[offset:])
+        self.n_outputs, varint_size = decode_compactsize(raw_hex[offset:])
         offset += varint_size
 
         self.outputs = []
@@ -65,10 +65,10 @@ class Transaction(object):
         if self.is_segwit:
             self._offset_before_tx_witnesses = offset
             for inp in self.inputs:
-                tx_witnesses_n, varint_size = decode_varint(raw_hex[offset:])
+                tx_witnesses_n, varint_size = decode_compactsize(raw_hex[offset:])
                 offset += varint_size
                 for j in range(tx_witnesses_n):
-                    component_length, varint_size = decode_varint(
+                    component_length, varint_size = decode_compactsize(
                         raw_hex[offset:])
                     offset += varint_size
                     witness = raw_hex[offset:offset + component_length]

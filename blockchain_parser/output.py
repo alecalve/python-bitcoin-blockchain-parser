@@ -9,7 +9,7 @@
 # modified, propagated, or distributed except according to the terms contained
 # in the LICENSE file.
 
-from .utils import decode_varint, decode_uint64
+from .utils import decode_compactsize, decode_uint64
 from .script import Script
 from .address import Address
 
@@ -22,7 +22,7 @@ class Output(object):
         self._script = None
         self._addresses = None
 
-        script_length, varint_size = decode_varint(raw_hex[8:])
+        script_length, varint_size = decode_compactsize(raw_hex[8:])
         script_start = 8 + varint_size
 
         self._script_hex = raw_hex[script_start:script_start+script_length]

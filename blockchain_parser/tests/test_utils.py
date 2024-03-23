@@ -44,12 +44,12 @@ class TestUtils(unittest.TestCase):
         for uint64, value in uint64_dict.items():
             self.assertEqual(utils.decode_uint64(a2b_hex(uint64)), value)
 
-    def test_decode_varint(self):
+    def test_decode_compactsize(self):
         case1 = a2b_hex("fa")
-        self.assertEqual(utils.decode_varint(case1), (250, 1))
+        self.assertEqual(utils.decode_compactsize(case1), (250, 1))
         case2 = a2b_hex("fd0100")
-        self.assertEqual(utils.decode_varint(case2), (1, 3))
+        self.assertEqual(utils.decode_compactsize(case2), (1, 3))
         case3 = a2b_hex("fe01000000")
-        self.assertEqual(utils.decode_varint(case3), (1, 5))
+        self.assertEqual(utils.decode_compactsize(case3), (1, 5))
         case4 = a2b_hex("ff0100000000000000")
-        self.assertEqual(utils.decode_varint(case4), (1, 9))
+        self.assertEqual(utils.decode_compactsize(case4), (1, 9))
