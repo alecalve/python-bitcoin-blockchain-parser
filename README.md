@@ -10,6 +10,14 @@ This Python 3 library provides a parser for the raw data stored by bitcoind.
 
 ## Installing
 
+Whether installing using Pip or from source, plyvel requires leveldb development libraries for LevelDB >1.2.X.
+
+On Linux, install libleveldb-dev
+
+```
+sudo apt-get install libleveldb-dev
+```
+
 ### Using pip
 
 ```
@@ -20,13 +28,6 @@ pip install blockchain-parser
 
 Requirements : python-bitcoinlib, plyvel, coverage for tests
 
-plyvel requires leveldb development libraries for LevelDB >1.2.X
-
-On Linux, install libleveldb-dev
-
-```
-sudo apt-get install libleveldb-dev
-```
 
 Install dependencies contained in `requirements.txt`:
 ```
