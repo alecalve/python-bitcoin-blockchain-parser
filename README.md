@@ -51,7 +51,7 @@ pip install -r requirements.txt
 
 Run the test suite by lauching
 ```
-./tests.sh
+pytest
 ```
 
 ## Examples

@@ -27,6 +27,7 @@ class TestScript(unittest.TestCase):
         self.assertFalse(script.is_pubkeyhash())
         self.assertFalse(script.is_unknown())
         self.assertTrue(script.is_return())
+        self.assertFalse(script.is_p2tr())
 
     def test_unknown_script(self):
         case = "40"
@@ -40,6 +41,7 @@ class TestScript(unittest.TestCase):
         self.assertFalse(script.is_pubkeyhash())
         self.assertTrue(script.is_unknown())
         self.assertFalse(script.is_return())
+        self.assertFalse(script.is_p2tr())
 
         case = ""
         script = Script.from_hex(a2b_hex(case))
@@ -52,6 +54,7 @@ class TestScript(unittest.TestCase):
         self.assertFalse(script.is_pubkeyhash())
         self.assertTrue(script.is_unknown())
         self.assertFalse(script.is_return())
+        self.assertFalse(script.is_p2tr())
 
     def test_multisig_script(self):
         case = "514104cc71eb30d653c0c3163990c47b976f3fb3f37cccdcbedb169a1dfef58bbfbfaff7d8a473e7e2e6d317b87bafe8bde97e3cf8f065dec022b51d11fcdd0d348ac4410461cbdcc5409fb4b4d42b51d33381354d80e550078cb532a34bfa2fcfdeb7d76519aecc62770f5b0e4ef8551946d8a540911abe3e7854a26f39f58b25c15342af52ae"
@@ -64,6 +67,7 @@ class TestScript(unittest.TestCase):
         self.assertFalse(script.is_pubkeyhash())
         self.assertFalse(script.is_unknown())
         self.assertFalse(script.is_return())
+        self.assertFalse(script.is_p2tr())
 
     def test_p2sh_script(self):
         case = "a91428ad3e63dcae36e5010527578e2eef0e9eeaf3e487"
@@ -76,6 +80,7 @@ class TestScript(unittest.TestCase):
         self.assertFalse(script.is_pubkeyhash())
         self.assertFalse(script.is_unknown())
         self.assertFalse(script.is_return())
+        self.assertFalse(script.is_p2tr())
 
     def test_p2wpkh_script(self):
         case = "0014c958269b5b6469b6e4b87de1062028ad3bb83cc2"
@@ -88,6 +93,7 @@ class TestScript(unittest.TestCase):
         self.assertFalse(script.is_pubkeyhash())
         self.assertFalse(script.is_unknown())
         self.assertFalse(script.is_return())
+        self.assertFalse(script.is_p2tr())
 
     def test_p2wsh_script(self):
         case = "0020701a8d401c84fb13e6baf169d59684e17abd9fa216c8cc5b9fc63d622ff8c58d"
@@ -100,6 +106,7 @@ class TestScript(unittest.TestCase):
         self.assertFalse(script.is_pubkeyhash())
         self.assertFalse(script.is_unknown())
         self.assertFalse(script.is_return())
+        self.assertFalse(script.is_p2tr())
 
     def test_pubkeyhash_script(self):
         case = "76a914e9629ef6f5b82564a9b2ecae6c288c56fb33710888ac"
@@ -112,6 +119,7 @@ class TestScript(unittest.TestCase):
         self.assertTrue(script.is_pubkeyhash())
         self.assertFalse(script.is_unknown())
         self.assertFalse(script.is_return())
+        self.assertFalse(script.is_p2tr())
 
     def test_pubkey_script(self):
         script = Script.from_hex(a2b_hex("4104678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5fac"))
@@ -123,3 +131,18 @@ class TestScript(unittest.TestCase):
         self.assertFalse(script.is_pubkeyhash())
         self.assertFalse(script.is_unknown())
         self.assertFalse(script.is_return())
+        self.assertFalse(script.is_p2tr())
+
+    def test_taproot_script(self):
+        # https://blockstream.info/tx/33e794d097969002ee05d336686fc03c9e15a597c1b9827669460fac98799036?expand
+        # Second output
+        script = Script.from_hex(a2b_hex("5120a37c3903c8d0db6512e2b40b0dffa05e5a3ab73603ce8c9c4b7771e5412328f9"))
+        self.assertFalse(script.is_pubkey())
+        self.assertFalse(script.is_multisig())
+        self.assertFalse(script.is_p2sh())
+        self.assertFalse(script.is_p2wpkh())
+        self.assertFalse(script.is_p2wsh())
+        self.assertFalse(script.is_pubkeyhash())
+        self.assertFalse(script.is_unknown())
+        self.assertFalse(script.is_return())
+        self.assertTrue(script.is_p2tr())
