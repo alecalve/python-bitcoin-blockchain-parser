@@ -30,3 +30,16 @@ class TestUtils(unittest.TestCase):
         ripemd160 = "010966776006953D5567439E5E39F86A0D273BEE"
         address = Address.from_ripemd160(a2b_hex(ripemd160))
         self.assertEqual(address.address, "16UwLL9Risc3QfPqBUvKofHmBQ7wMtjvM")
+
+    def test_from_bech32(self):
+        # Example sourced from https://en.bitcoin.it/wiki/Bech32
+        bech32 = "751e76e8199196d454941c45d1b3a323f1433bd6"
+        address = Address.from_bech32(a2b_hex(bech32), segwit_version=0)
+        self.assertEqual(address.address, "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4")
+
+    def test_from_bech32m(self):
+        # https://blockstream.info/tx/33e794d097969002ee05d336686fc03c9e15a597c1b9827669460fac98799036?expand
+        # Second output
+        bech32m = "a37c3903c8d0db6512e2b40b0dffa05e5a3ab73603ce8c9c4b7771e5412328f9"
+        address = Address.from_bech32m(a2b_hex(bech32m), segwit_version=1)
+        self.assertEqual(address.address, "bc1p5d7rjq7g6rdk2yhzks9smlaqtedr4dekq08ge8ztwac72sfr9rusxg3297")

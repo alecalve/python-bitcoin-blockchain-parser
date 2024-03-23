@@ -5,7 +5,7 @@ This Python 3 library provides a parser for the raw data stored by bitcoind.
 - Detects outputs types
 - Detects addresses in outputs
 - Interprets scripts
-- Supports SegWit
+- Supports SegWit and Taproot
 - Supports ordered block parsing
 
 ## Installing
@@ -51,7 +51,7 @@ pip install -r requirements.txt
 
 Run the test suite by lauching
 ```
-./tests.sh
+pytest
 ```
 
 ## Examples
