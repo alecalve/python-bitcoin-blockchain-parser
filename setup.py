@@ -20,6 +20,7 @@ setup(
     ],
     install_requires=[
         'python-bitcoinlib==0.11.0',
-        'plyvel==1.5.1'
+        'plyvel==1.5.1',
+        'ripemd-hash==1.0.1'
     ]
 )

@@ -12,10 +12,13 @@
 import hashlib
 import struct
 
+from ripemd import ripemd160
 
 def btc_ripemd160(data):
+    """Computes ripemd160(sha256(data))"""
+
     h1 = hashlib.sha256(data).digest()
-    r160 = hashlib.new("ripemd160")
+    r160 = ripemd160.new()
     r160.update(h1)
     return r160.digest()
 
