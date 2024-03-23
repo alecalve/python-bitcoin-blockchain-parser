@@ -11,6 +11,7 @@
 
 from bitcoin.core.script import *
 from binascii import b2a_hex
+from .utils_taproot import from_taproot
 
 
 def is_public_key(hex_data):
@@ -107,6 +108,13 @@ class Script(object):
     def is_p2wpkh(self):
         return self.script.is_witness_v0_keyhash()
 
+    def is_p2tr(self):
+        if len(self.operations) > 1 and type(self.operations[1]) == bytes:
+            taproot = from_taproot(b2a_hex(self.operations[1]).decode("ascii"))
+            return self.operations[0] == 1 \
+                and isinstance(taproot, str) \
+                and taproot.startswith("bc1p")
+
     def is_pubkey(self):
         return len(self.operations) == 2 \
             and self.operations[-1] == OP_CHECKSIG \
@@ -142,4 +150,4 @@ class Script(object):
         return not self.is_pubkeyhash() and not self.is_pubkey() \
             and not self.is_p2sh() and not self.is_multisig() \
             and not self.is_return() and not self.is_p2wpkh() \
-            and not self.is_p2wsh()
+            and not self.is_p2wsh() and not self.is_p2tr()
