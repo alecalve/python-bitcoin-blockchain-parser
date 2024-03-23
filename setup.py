@@ -10,6 +10,8 @@ setup(
     author='Antoine Le Calvez',
     author_email='antoine@p2sh.info',
     description='Bitcoin blockchain parser',
+    long_description=open('README.md').read(),
+    long_description_content_type='text/markdown',
     test_suite='blockchain_parser.tests',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
