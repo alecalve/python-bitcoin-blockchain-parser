@@ -1,4 +1,4 @@
-# bitcoin-blockchain-parser [![Build Status](https://github.com/alecalve/python-bitcoin-blockchain-parser/actions/workflows/python-package/badge.svg)] [![Coverage Status](https://coveralls.io/repos/alecalve/python-bitcoin-blockchain-parser/badge.svg?branch=master&service=github)](https://coveralls.io/github/alecalve/python-bitcoin-blockchain-parser?branch=master)
+# bitcoin-blockchain-parser [![Build Status](https://github.com/alecalve/python-bitcoin-blockchain-parser/actions/workflows/python-package.yml/badge.svg)] [![Coverage Status](https://coveralls.io/repos/alecalve/python-bitcoin-blockchain-parser/badge.svg?branch=master&service=github)](https://coveralls.io/github/alecalve/python-bitcoin-blockchain-parser?branch=master)
 This Python 3 library provides a parser for the raw data stored by bitcoind.
 
 ## Features
