@@ -86,8 +86,6 @@ class Blockchain(object):
 
     def __init__(self, path):
         self.path = path
-        self.blockIndexes = None
-        self.indexPath = None
 
     def get_unordered_blocks(self):
         """Yields the blocks contained in the .blk files as is,
@@ -96,20 +94,6 @@ class Blockchain(object):
         for blk_file in get_files(self.path):
             for raw_block in get_blocks(blk_file):
                 yield Block(raw_block, None, os.path.split(blk_file)[1])
-
-    def __getBlockIndexes(self, index):
-        """There is no method of leveldb to close the db (and release the lock).
-        This creates problem during concurrent operations.
-        This function also provides caching of indexes.
-        """
-        if self.indexPath != index:
-            db = plyvel.DB(index, compression=None)
-            self.blockIndexes = [DBBlockIndex(format_hash(k[1:]), v)
-                                 for k, v in db.iterator() if k[0] == ord('b')]
-            db.close()
-            self.blockIndexes.sort(key=lambda x: x.height)
-            self.indexPath = index
-        return self.blockIndexes
 
     def _index_confirmed(self, chain_indexes, num_confirmations=6):
         """Check if the first block index in "chain_indexes" has at least
@@ -166,22 +150,24 @@ class Blockchain(object):
                 blockIndexes = pickle.load(f)
 
         if blockIndexes is None:
-            # build the block index
-            blockIndexes = self.__getBlockIndexes(index)
+            with plyvel.DB(index, compression=None) as db:
+                # Block index entries are stored with keys prefixed by 'b'
+                with db.iterator(prefix=b'b') as iterator:
+                    blockIndexes = [DBBlockIndex(format_hash(k[1:]), v) for k, v in iterator]
+
             if cache and not os.path.exists(cache):
                 # cache the block index for re-use next time
                 with open(cache, 'wb') as f:
                     pickle.dump(blockIndexes, f)
 
-        # remove small forks that may have occurred while the node was live.
         # Occasionally a node will receive two different solutions to a block
-        # at the same time. The Leveldb index saves both, not pruning the
+        # at the same time. The node saves both to disk, not pruning the
         # block that leads to a shorter chain once the fork is settled without
-        # "-reindex"ing the bitcoind block data. This leads to at least two
-        # blocks with the same height in the database.
+        # "-reindex"ing the bitcoind block data. This leads to sometimes there
+        # being two blocks with the same height in the database.
         # We throw out blocks that don't have at least 6 other blocks on top of
         # it (6 confirmations).
-        orphans = []  # hold blocks that are orphans with < 6 blocks on top
+        stale_blocks = []  # hold hashes of blocks that are stale with < 6 blocks on top
         last_height = -1
         for i, blockIdx in enumerate(blockIndexes):
             if last_height > -1:
@@ -196,18 +182,18 @@ class Blockchain(object):
 
                         # if this block is confirmed, the unconfirmed block is
                         # the previous one. Remove it.
-                        orphans.append(blockIndexes[i - 1].hash)
+                        stale_blocks.append(blockIndexes[i - 1].hash)
                     else:
 
                         # if this block isn't confirmed, remove it.
-                        orphans.append(blockIndexes[i].hash)
+                        stale_blocks.append(blockIndexes[i].hash)
 
             last_height = blockIdx.height
 
-        # filter out the orphan blocks, so we are left only with block indexes
+        # filter out stale blocks, so we are left only with block indexes
         # that have been confirmed
         # (or are new enough that they haven't yet been confirmed)
-        blockIndexes = list(filter(lambda block: block.hash not in orphans, blockIndexes))
+        blockIndexes = list(filter(lambda block: block.hash not in stale_blocks, blockIndexes))
 
         if end is None:
             end = len(blockIndexes)
