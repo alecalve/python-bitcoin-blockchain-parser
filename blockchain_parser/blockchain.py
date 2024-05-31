@@ -206,7 +206,7 @@ class Blockchain(object):
         # that have been confirmed
         # (or are new enough that they haven't yet been confirmed)
         blockIndexes = list(filter(lambda block: block.hash not in stale_blocks, blockIndexes))
-
+        blockIndexes.sort(key= lambda b: b.height)
         if end is None:
             end = len(blockIndexes)
 
