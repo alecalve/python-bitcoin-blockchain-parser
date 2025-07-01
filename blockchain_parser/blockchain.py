@@ -15,6 +15,7 @@ import struct
 import pickle
 import stat
 import plyvel
+from xor_cipher import cyclic_xor
 
 from blockchain_parser.transaction import Transaction
 from blockchain_parser.index import DBTransactionIndex
@@ -43,52 +44,70 @@ def get_files(path):
     files = map(lambda x: os.path.join(path, x), files)
     return sorted(files)
 
-def get_undo_files(path):
-    """
-    Given the path to the .bitcoin directory, returns the sorted list of rev*.dat
-    files contained in that directory
-    """
-    if not stat.S_ISDIR(os.stat(path)[stat.ST_MODE]):
-        return [path]
-    files = os.listdir(path)
-    files = [f for f in files if f.startswith("rev") and f.endswith(".dat")]
-    files = map(lambda x: os.path.join(path, x), files)
-    return sorted(files)
 
-
-def get_blocks(blockfile):
+def get_blocks(blockfile, xor_key=None):
     """
-    Given the name of a .dat file, for every block contained in the file,
+    Given the name of a .blk file, for every block contained in the file,
     yields its raw hexadecimal value
     """
-    with open(blockfile, "rb") as f:
-        if os.name == 'nt':
-            size = os.path.getsize(f.name)
-            raw_data = mmap.mmap(f.fileno(), size, access=mmap.ACCESS_READ)
-        else:
-            # Unix-only call, will not work on Windows, see python doc.
-            raw_data = mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ)
-        length = len(raw_data)
-        offset = 0
-        block_count = 0
-        while offset < (length - 4):
-            if raw_data[offset:offset+4] == BITCOIN_CONSTANT:
-                offset += 4
-                size = struct.unpack("<I", raw_data[offset:offset+4])[0]
-                offset += 4 + size
-                block_count += 1
-                yield raw_data[offset-size:offset]
+
+    if not xor_key:
+        with open(blockfile, "rb") as f:
+            if os.name == 'nt':
+                size = os.path.getsize(f.name)
+                raw_data = mmap.mmap(f.fileno(), size, access=mmap.ACCESS_READ)
             else:
-                offset += 1
+                # Unix-only call, will not work on Windows, see python doc.
+                raw_data = mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ)
+    else:
+        # Load into memory if XOR key is provided for fast cipher (blk files are < 140MB, this shouldn't be an issue)
+        with open(blockfile, 'rb') as f:
+            raw_data = f.read() 
+
+        # Use XOR key
+        if xor_key:
+            # Cipher data 
+            raw_data = cyclic_xor(raw_data, xor_key)
+
+
+    length = len(raw_data)
+    offset = 0
+    block_count = 0
+    while offset < (length - 4):
+        if raw_data[offset:offset+4] == BITCOIN_CONSTANT:
+            offset += 4
+            size = struct.unpack("<I", raw_data[offset:offset+4])[0]
+            offset += 4 + size
+            block_count += 1
+            yield raw_data[offset-size:offset]
+        else:
+            offset += 1
+    
+
+    # Raw data is likely passed as bytes
+    if raw_data is None:
         raw_data.close()
 
 
-def get_block(blockfile, offset):
+def get_block(blockfile, offset, xor_key=None):
     """Extracts a single block from the blockfile at the given offset"""
     with open(blockfile, "rb") as f:
         f.seek(offset - 4)  # Size is present 4 bytes before the db offset
-        size, = struct.unpack("<I", f.read(4))
-        return f.read(size)
+        if not xor_key:
+            size, = struct.unpack("<I", f.read(4))
+            return f.read(size)
+        else:
+            # Apply XOR cipher
+            cipher_offset = ((offset-4) % len(xor_key))
+            # Adjust key
+            adj_xor_key = xor_key[cipher_offset:] + xor_key[:cipher_offset]
+            # Get size to read
+            size, = struct.unpack("<I",cyclic_xor(f.read(4), adj_xor_key))
+            # Adjust cipher again (adjust post size)
+            adj_xor_key = adj_xor_key[4:] + adj_xor_key[:4]
+            # Read and cipher
+            return cyclic_xor(f.read(size), adj_xor_key)
+
 
 
 class Blockchain(object):
@@ -96,16 +115,41 @@ class Blockchain(object):
     maintained by bitcoind.
     """
 
-    def __init__(self, path):
+    def __init__(self, path, xor_key_file=None):
         self.path = path
+        # Check if XOR file is found in block path, warn if found (if not using)
+        if not xor_key_file and os.path.isfile(os.path.join(path,'xor.dat')):
+            print('WARNING: xor.dat identified within block path, but xor.dat not used in xor_key_file')
+            self.xor_key = None
+        else:
+            with open(xor_key_file, 'rb') as tmp:
+                self.xor_key = tmp.read()
+        self.blockIndexes = None
+        self.indexPath = None
+        
 
     def get_unordered_blocks(self):
         """Yields the blocks contained in the .blk files as is,
         without ordering them according to height.
         """
         for blk_file in get_files(self.path):
-            for raw_block in get_blocks(blk_file):
+            for raw_block in get_blocks(blk_file, self.xor_key):
                 yield Block(raw_block, None, os.path.split(blk_file)[1])
+
+
+    def __getBlockIndexes(self, index):
+        """There is no method of leveldb to close the db (and release the lock).
+        This creates problem during concurrent operations.
+        This function also provides caching of indexes.
+        """
+        if self.indexPath != index:
+            db = plyvel.DB(index, compression=None)
+            self.blockIndexes = [DBBlockIndex(format_hash(k[1:]), v)
+                                 for k, v in db.iterator() if k[0] == ord('b')]
+            db.close()
+            self.blockIndexes.sort(key=lambda x: x.height)
+            self.indexPath = index
+        return self.blockIndexes
 
     def _index_confirmed(self, chain_indexes, num_confirmations=6):
         """Check if the first block index in "chain_indexes" has at least
@@ -129,7 +173,7 @@ class Blockchain(object):
 
             # parse the block
             blkFile = os.path.join(self.path, "blk%05d.dat" % index.file)
-            block = Block(get_block(blkFile, index.data_pos))
+            block = Block(get_block(blkFile, index.data_pos, self.xor_key))
 
             if i == 0:
                 first_block = block
@@ -162,24 +206,22 @@ class Blockchain(object):
                 blockIndexes = pickle.load(f)
 
         if blockIndexes is None:
-            with plyvel.DB(index, compression=None) as db:
-                # Block index entries are stored with keys prefixed by 'b'
-                with db.iterator(prefix=b'b') as iterator:
-                    blockIndexes = [DBBlockIndex(format_hash(k[1:]), v) for k, v in iterator]
-
+            # build the block index
+            blockIndexes = self.__getBlockIndexes(index)
             if cache and not os.path.exists(cache):
                 # cache the block index for re-use next time
                 with open(cache, 'wb') as f:
                     pickle.dump(blockIndexes, f)
 
+        # remove small forks that may have occurred while the node was live.
         # Occasionally a node will receive two different solutions to a block
-        # at the same time. The node saves both to disk, not pruning the
+        # at the same time. The Leveldb index saves both, not pruning the
         # block that leads to a shorter chain once the fork is settled without
-        # "-reindex"ing the bitcoind block data. This leads to sometimes there
-        # being two blocks with the same height in the database.
+        # "-reindex"ing the bitcoind block data. This leads to at least two
+        # blocks with the same height in the database.
         # We throw out blocks that don't have at least 6 other blocks on top of
         # it (6 confirmations).
-        stale_blocks = []  # hold hashes of blocks that are stale with < 6 blocks on top
+        orphans = []  # hold blocks that are orphans with < 6 blocks on top
         last_height = -1
         for i, blockIdx in enumerate(blockIndexes):
             if last_height > -1:
@@ -194,18 +236,18 @@ class Blockchain(object):
 
                         # if this block is confirmed, the unconfirmed block is
                         # the previous one. Remove it.
-                        stale_blocks.append(blockIndexes[i - 1].hash)
+                        orphans.append(blockIndexes[i - 1].hash)
                     else:
 
                         # if this block isn't confirmed, remove it.
-                        stale_blocks.append(blockIndexes[i].hash)
+                        orphans.append(blockIndexes[i].hash)
 
             last_height = blockIdx.height
 
-        # filter out stale blocks, so we are left only with block indexes
+        # filter out the orphan blocks, so we are left only with block indexes
         # that have been confirmed
         # (or are new enough that they haven't yet been confirmed)
-        blockIndexes = list(filter(lambda block: block.hash not in stale_blocks, blockIndexes))
+        blockIndexes = list(filter(lambda block: block.hash not in orphans, blockIndexes))
 
         if end is None:
             end = len(blockIndexes)
@@ -219,7 +261,7 @@ class Blockchain(object):
             if blkIdx.file == -1 or blkIdx.data_pos == -1:
                 break
             blkFile = os.path.join(self.path, "blk%05d.dat" % blkIdx.file)
-            yield Block(get_block(blkFile, blkIdx.data_pos), blkIdx.height)
+            yield Block(get_block(blkFile, blkIdx.data_pos, self.xor_key), blkIdx.height)
 
     def get_transaction(self, txid, db):
         """Yields the transaction contained in the .blk files as a python
@@ -237,7 +279,7 @@ class Blockchain(object):
 
         tx_idx = DBTransactionIndex(utils.format_hash(tx_hash_fmtd), raw_hex)
         blk_file = os.path.join(self.path, "blk%05d.dat" % tx_idx.blockfile_no)
-        raw_hex = get_block(blk_file, tx_idx.file_offset)
+        raw_hex = get_block(blk_file, tx_idx.file_offset, self.xor_key)
 
         offset = tx_idx.block_offset
 
